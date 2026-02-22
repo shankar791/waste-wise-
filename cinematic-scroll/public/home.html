@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WASTE WISE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800;900&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: block;
+            background: #1a2e1a;
+        }
+
+        /* ─── MAIN FRAME ─── */
+        .frame {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── BACKGROUND IMAGE ─── */
+        .bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('without bar.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+
+        /* Soft vignette overlay to deepen edges */
+        .bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 38%,
+                    rgba(220, 255, 150, 0.08) 0%,
+                    transparent 60%);
+        }
+
+        /* ─── HEADER ROW ─── */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem 2.5rem;
+        }
+
+        /* Left: REDUCE REUSE RECYCLE */
+        .tagline {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(30, 40, 20, 0.75);
+        }
+
+        /* ─── CENTER GLASS NAV ─── */
+        .glass-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.6rem 1.4rem;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(40px) saturate(1.5);
+            -webkit-backdrop-filter: blur(40px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 100px;
+            box-shadow:
+                0 4px 24px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-link {
+            padding: 0.35rem 0.9rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(20, 40, 15, 0.7);
+            cursor: pointer;
+            border-radius: 100px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            color: rgba(20, 40, 15, 1);
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 14px;
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        /* Right: Contact Button */
+        .contact-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.55rem 1.1rem 0.55rem 0.55rem;
+            background: #111;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .contact-btn:hover {
+            background: #222;
+            transform: scale(1.03);
+        }
+
+        .contact-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contact-icon svg {
+            display: block;
+        }
+
+        .contact-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: white;
+            padding-right: 0.3rem;
+        }
+
+        /* ─── USER PILL (replaces contact btn after login) ─── */
+        .user-pill {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem 0.35rem 0.45rem;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 100px;
+            cursor: default;
+        }
+
+        .user-pill.visible {
+            display: flex;
+        }
+
+        .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .user-email-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(10, 30, 10, 0.85);
+            white-space: nowrap;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .online-dot {
+            width: 7px;
+            height: 7px;
+            background: #22c55e;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        /* ─── FILE INPUT BAR ─── */
+        .search-wrap {
+            position: absolute;
+            left: 50%;
+            top: 58%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: min(580px, 80vw);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.9rem 1.4rem;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(40px) saturate(1.6);
+            -webkit-backdrop-filter: blur(40px) saturate(1.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 100px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.55);
+            transition: border-color 0.25s, box-shadow 0.25s;
+            cursor: pointer;
+        }
+
+        .search-bar:hover {
+            border-color: rgba(255, 255, 255, 0.75);
+            box-shadow:
+                0 8px 40px rgba(0, 0, 0, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .search-icon {
+            color: rgba(30, 50, 20, 0.5);
+            flex-shrink: 0;
+        }
+
+        .file-label {
+            flex: 1;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: rgba(30, 50, 20, 0.45);
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .file-label.has-file {
+            color: rgba(20, 100, 40, 0.85);
+            font-weight: 500;
+        }
+
+        .upload-pill {
+            padding: 0.35rem 1rem;
+            background: rgba(20, 40, 15, 0.12);
+            border: 1px solid rgba(30, 50, 20, 0.2);
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: rgba(20, 40, 15, 0.6);
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ─── COMBINED INPUT BAR ─── */
+        .combo-wrap {
+            position: absolute;
+            left: 50%;
+            top: 62%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: min(640px, 88vw);
+        }
+
+        .combo-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            width: 100%;
+            padding: 0.55rem 0.55rem 0.55rem 1.2rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(40px) saturate(1.6);
+            -webkit-backdrop-filter: blur(40px) saturate(1.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 100px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .combo-file {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex: 1;
+            cursor: pointer;
+            min-width: 0;
+        }
+
+        .combo-divider {
+            width: 1px;
+            height: 22px;
+            background: rgba(30, 50, 20, 0.18);
+            margin: 0 1rem;
+            flex-shrink: 0;
+        }
+
+        .combo-num {
+            width: 110px;
+            flex-shrink: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: rgba(10, 30, 10, 0.8);
+        }
+
+        .combo-num::placeholder {
+            color: rgba(30, 50, 20, 0.4);
+        }
+
+        .combo-num::-webkit-inner-spin-button,
+        .combo-num::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .combo-submit {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 100px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .combo-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .combo-submit:active {
+            transform: translateY(0);
+        }
+
+        /* ─── POPUP OVERLAY ─── */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+
+        .popup-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Card */
+        .popup-card {
+            width: min(440px, 92vw);
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(50px) saturate(1.8);
+            -webkit-backdrop-filter: blur(50px) saturate(1.8);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 24px;
+            padding: 2.5rem 2.25rem 2rem;
+            box-shadow:
+                0 32px 80px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transform: translateY(28px) scale(0.97);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .popup-overlay.open .popup-card {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Close btn */
+        .popup-close {
+            position: absolute;
+            top: 1.1rem;
+            right: 1.1rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(20, 40, 15, 0.5);
+            font-size: 1rem;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .popup-close:hover {
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        /* Badge */
+        .popup-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.8rem;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 100px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #166534;
+            margin-bottom: 1rem;
+        }
+
+        .popup-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+
+        .popup-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-sub {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 1.75rem;
+        }
+
+        /* Fields */
+        .popup-field {
+            margin-bottom: 0.9rem;
+        }
+
+        .popup-field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #4ade80;
+            margin-bottom: 0.4rem;
+        }
+
+        .popup-field input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .popup-field input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .popup-field input:focus {
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        /* Submit */
+        .popup-submit {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+        }
+
+        .popup-submit:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 32px rgba(34, 197, 94, 0.4);
+        }
+
+        .popup-submit:active {
+            transform: translateY(0);
+        }
+
+        .popup-terms {
+            text-align: center;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 1rem;
+        }
+
+        /* Success state */
+        .popup-success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.75rem;
+            padding: 1rem 0 0.5rem;
+        }
+
+        .popup-success-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 32px rgba(34, 197, 94, 0.4);
+        }
+
+        .popup-success h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: rgba(10, 30, 10, 0.9);
+        }
+
+        .popup-success p {
+            font-size: 0.82rem;
+            color: rgba(20, 40, 15, 0.5);
+        }
+
+        /* ─── RESPONSIVENESS ─── */
+        @media (max-width: 850px) {
+            .header {
+                padding: 1.5rem;
+                flex-direction: column;
+                gap: 1.2rem;
+            }
+
+            .tagline {
+                display: none;
+            }
+
+            .glass-nav {
+                padding: 0.4rem 0.8rem;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-radius: 20px;
+            }
+
+            .nav-link {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.6rem;
+            }
+
+            .nav-divider {
+                display: none;
+            }
+
+            .combo-wrap {
+                width: 90vw;
+                top: 50%;
+            }
+
+            .combo-bar {
+                flex-direction: column;
+                padding: 1.2rem;
+                border-radius: 24px;
+                gap: 1rem;
+            }
+
+            .combo-file {
+                width: 100%;
+                justify-content: center;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid rgba(30, 50, 20, 0.1);
+            }
+
+            .combo-divider {
+                display: none;
+            }
+
+            .combo-num {
+                width: 100%;
+                text-align: center;
+                padding: 0.5rem 0;
+            }
+
+            .combo-submit {
+                width: 100%;
+                justify-content: center;
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .glass-nav {
+                gap: 0;
+            }
+
+            .nav-link {
+                font-size: 0.55rem;
+                padding: 0.25rem 0.45rem;
+            }
+
+            .combo-wrap {
+                top: 45%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="frame">
+
+        <!-- Background -->
+        <div class="bg"></div>
+
+        <!-- Header -->
+        <header class="header">
+
+            <!-- Left: Tagline -->
+            <span class="tagline">Reduce &nbsp; Reuse &nbsp; Recycle</span>
+
+            <!-- Center: Glass Nav -->
+            <nav class="glass-nav">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <div class="nav-divider"></div>
+                <a href="shop.html" class="nav-link">Green Rewards</a>
+                <div class="nav-divider"></div>
+                <a href="greenpoints-map.html" class="nav-link">Campaigns</a>
+                <div class="nav-divider"></div>
+                <a href="dashboard.html" class="nav-link">Reports</a>
+                <div class="nav-divider"></div>
+                <a href="ai-chat.html" class="nav-link">AI Assistant</a>
+            </nav>
+
+            <!-- Right: User pill (shown after login) -->
+            <div class="user-pill" id="user-pill">
+                <div class="user-avatar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </div>
+                <span class="user-email-text" id="user-email-text">user@email.com</span>
+                <div class="online-dot"></div>
+            </div>
+
+        </header>
+
+        <!-- Combined Input Bar -->
+        <div class="combo-wrap">
+            <div class="combo-bar">
+                <!-- File section -->
+                <div class="combo-file" onclick="document.getElementById('img-input').click()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="color:rgba(30,50,20,0.45);flex-shrink:0">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span class="file-label" id="file-label">Input your file</span>
+                </div>
+
+                <!-- Divider -->
+                <div class="combo-divider"></div>
+
+                <!-- Number section -->
+                <input type="number" id="num-input" class="combo-num" placeholder="Weight (kg)" />
+
+                <!-- Green submit -->
+                <button class="combo-submit" onclick="handleSubmit()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Submit
+                </button>
+            </div>
+            <input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImage(this)" />
+        </div>
+
+        <script>
+            function handleImage(input) {
+                const label = document.getElementById('file-label');
+                if (input.files && input.files[0]) {
+                    label.textContent = '\u2713 ' + input.files[0].name;
+                    label.classList.add('has-file');
+                }
+            }
+            async function handleSubmit() {
+                const file = document.getElementById('img-input').files[0];
+                const num = document.getElementById('num-input').value.trim();
+                const email = localStorage.getItem('ww_email') || '';
+
+                // 🔒 Must be logged in
+                if (!email) {
+                    const popup = document.getElementById('popup');
+                    popup.classList.add('open');
+                    // Shake the popup card to draw attention
+                    const card = popup.querySelector('.popup-card');
+                    card.style.animation = 'shake 0.4s ease';
+                    setTimeout(() => card.style.animation = '', 450);
+                    return;
+                }
+
+                if (!file) { document.getElementById('img-input').click(); return; }
+                if (!num) { document.getElementById('num-input').focus(); return; }
+
+                const btn = document.querySelector('.combo-submit');
+                btn.textContent = 'Analysing\u2026';
+                btn.disabled = true;
+
+                try {
+                    const fd = new FormData();
+                    fd.append('email', email);
+                    fd.append('image', file);
+                    fd.append('weight', num);
+                    const res = await fetch('/user/upload', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.error) { alert('Error: ' + data.error); btn.textContent = 'Submit'; btn.disabled = false; return; }
+                    localStorage.setItem('ww_result', JSON.stringify(data));
+                    localStorage.setItem('ww_file', file.name);
+                    localStorage.setItem('ww_weight', num);
+                    window.location.href = 'dashboard.html';
+                } catch (err) {
+                    alert('Could not reach the server. Is the backend running?');
+                    btn.textContent = 'Submit';
+                    btn.disabled = false;
+                }
+            }
+
+        </script>
+
+    </div>
+
+    <!-- ─── EMAIL SIGN-UP POPUP ─── -->
+    <div class="popup-overlay" id="popup" onclick="closePopupOnBackdrop(event)">
+        <div class="popup-card">
+
+            <!-- Form -->
+            <div id="popup-form">
+                <div class="popup-badge">
+                    <div class="popup-badge-dot"></div>Join the Movement
+                </div>
+                <h2 class="popup-title">Create Your<br />Account</h2>
+                <p class="popup-sub">Sign up to access WasteWise features, track your impact, and join our community.
+                </p>
+
+                <div class="popup-field">
+                    <label for="signup-email">Email Address</label>
+                    <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" />
+                </div>
+                <div class="popup-field">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 8 characters"
+                        autocomplete="new-password" />
+                </div>
+
+                <button class="popup-submit" onclick="submitSignup()">Sign Up &#8594;</button>
+                <p class="popup-terms">By signing up you agree to our Terms &amp; Privacy Policy.</p>
+            </div>
+
+            <!-- Success -->
+            <div class="popup-success" id="popup-success">
+                <div class="popup-success-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                </div>
+                <h3>You&rsquo;re in!</h3>
+                <p>Account created! Opening login&hellip;</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── LOGIN POPUP ─── -->
+    <div class="popup-overlay" id="login-popup" onclick="closeLoginOnBackdrop(event)">
+        <div class="popup-card">
+
+            <!-- Login form -->
+            <div id="login-form">
+                <div class="popup-badge">
+                    <div class="popup-badge-dot"></div>Welcome Back
+                </div>
+                <h2 class="popup-title">Log In to<br />WasteWise</h2>
+                <p class="popup-sub">Enter your credentials to continue.</p>
+
+                <div class="popup-field">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+                </div>
+                <div class="popup-field">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Your password"
+                        autocomplete="current-password" />
+                </div>
+
+                <button class="popup-submit" onclick="submitLogin()">Log In &#8594;</button>
+                <p class="popup-terms">Forgot your password? <span style="color:#4ade80;cursor:pointer">Reset it</span>
+                </p>
+            </div>
+
+            <!-- Login success -->
+            <div class="popup-success" id="login-success">
+                <div class="popup-success-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                </div>
+                <h3>Welcome back!</h3>
+                <p id="login-welcome-msg">You are now logged in.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-open sign-up after 1.2s
+        // Inject shake keyframe for the login-required animation
+        const _css = document.createElement('style');
+        _css.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+        document.head.appendChild(_css);
+
+        // Auto-open sign-up only if not already logged in
+        if (!localStorage.getItem('ww_email')) {
+            setTimeout(() => document.getElementById('popup').classList.add('open'), 1200);
+        }
+
+
+        /* ── Sign-up ── */
+        function closePopup() { document.getElementById('popup').classList.remove('open'); }
+        function closePopupOnBackdrop(e) { if (e.target === document.getElementById('popup')) closePopup(); }
+
+        async function submitSignup() {
+            const emailEl = document.getElementById('signup-email');
+            const passEl = document.getElementById('signup-password');
+            const email = emailEl.value.trim();
+            const pass = passEl.value;
+            let valid = true;
+            if (!email || !email.includes('@')) {
+                emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                emailEl.style.boxShadow = '0 0 0 3px rgba(220,50,50,0.1)';
+                emailEl.focus(); valid = false;
+            } else { emailEl.style.borderColor = ''; emailEl.style.boxShadow = ''; }
+            if (pass.length < 8) {
+                passEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                passEl.style.boxShadow = '0 0 0 3px rgba(220,50,50,0.1)';
+                if (valid) passEl.focus(); valid = false;
+            } else { passEl.style.borderColor = ''; passEl.style.boxShadow = ''; }
+            if (!valid) return;
+
+            try {
+                const fd = new FormData();
+                fd.append('email', email);
+                fd.append('password', pass);
+                fd.append('role', 'user');
+                const res = await fetch('/signup', { method: 'POST', body: fd });
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    alert('Signup failed: ' + (errorData.detail || 'User already exists or server error.'));
+                    return;
+                }
+            } catch (e) {
+                alert('Backend unreachable. Please ensure the server is running.');
+                return;
+            }
+
+            document.getElementById('popup-form').style.display = 'none';
+            document.getElementById('popup-success').style.display = 'flex';
+            setTimeout(() => {
+                closePopup();
+                document.getElementById('login-email').value = email;
+                setTimeout(() => document.getElementById('login-popup').classList.add('open'), 400);
+            }, 1800);
+        }
+
+        /* ── Login ── */
+        function closeLogin() { document.getElementById('login-popup').classList.remove('open'); }
+        function closeLoginOnBackdrop(e) { if (e.target === document.getElementById('login-popup')) closeLogin(); }
+
+        async function submitLogin() {
+            const emailEl = document.getElementById('login-email');
+            const passEl = document.getElementById('login-password');
+            const email = emailEl.value.trim();
+            const pass = passEl.value;
+            if (!email || !email.includes('@')) {
+                emailEl.style.borderColor = 'rgba(220,50,50,0.5)'; emailEl.focus(); return;
+            }
+            if (!pass) { passEl.style.borderColor = 'rgba(220,50,50,0.5)'; passEl.focus(); return; }
+
+            try {
+                const fd = new FormData();
+                fd.append('email', email);
+                fd.append('password', pass);
+                fd.append('role', 'user');
+                const res = await fetch('/login', { method: 'POST', body: fd });
+                if (!res.ok) {
+                    throw new Error('Invalid credentials');
+                }
+                const data = await res.json();
+                if (!data['login success']) {
+                    emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                    passEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                    const existingError = passEl.parentNode.querySelector('.login-error');
+                    if (!existingError) {
+                        passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">Invalid credentials. Please try again.</p>');
+                    }
+                    return;
+                }
+            } catch (e) {
+                alert('Login failed. Please check your credentials or server status.');
+                return;
+            }
+
+            localStorage.setItem('ww_email', email);
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('login-welcome-msg').textContent = 'Logged in as ' + email;
+            document.getElementById('login-success').style.display = 'flex';
+            document.getElementById('user-email-text').textContent = email;
+            document.getElementById('user-pill').classList.add('visible');
+            setTimeout(() => closeLogin(), 2500);
+        }
+
+        function handleImage(input) {
+            const label = document.getElementById('file-label');
+            if (input.files && input.files[0]) {
+                label.textContent = '\u2713  ' + input.files[0].name;
+                label.classList.add('has-file');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

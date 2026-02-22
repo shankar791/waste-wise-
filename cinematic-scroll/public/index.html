@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WasteWise — A Greener Future</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ── Preloader ── */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            transition: opacity 0.8s ease;
+        }
+
+        #preloader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pre-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .pre-bar-wrap {
+            width: 220px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .pre-bar {
+            height: 100%;
+            width: 0%;
+            background: #fff;
+            border-radius: 2px;
+            transition: width 0.2s ease;
+        }
+
+        .pre-pct {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.1em;
+        }
+
+        /* ── Sticky canvas ── */
+        #sticky-wrap {
+            position: relative;
+            height: 600vh;
+        }
+
+        #canvas-sticky {
+            position: sticky;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #earth-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ── Scroll hint ── */
+        #scroll-hint {
+            position: fixed;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            opacity: 1;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        #scroll-hint.hidden {
+            opacity: 0;
+        }
+
+        .scroll-text {
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .scroll-arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 1.5px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.3);
+            transform: rotate(45deg);
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: rotate(45deg) translateY(0);
+            }
+
+            50% {
+                transform: rotate(45deg) translateY(5px);
+            }
+        }
+
+        /* ── CTA overlay (shown at end of scroll) ── */
+        #cta {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        #cta.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .cta-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #4ade80;
+        }
+
+        .cta-title {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: #fff;
+            text-align: center;
+            line-height: 1.05;
+        }
+
+        .cta-sub {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.55);
+            text-align: center;
+            max-width: 420px;
+            line-height: 1.6;
+        }
+
+        .cta-btn {
+            padding: 1.1rem 3rem;
+            background: #fff;
+            color: #000;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: box-shadow 0.3s, transform 0.2s;
+        }
+
+        .cta-btn:hover {
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+            transform: scale(1.04);
+        }
+
+        /* ─── RESPONSIVENESS ─── */
+        @media (max-width: 768px) {
+            .cta-title {
+                font-size: clamp(2rem, 10vw, 3.5rem);
+            }
+
+            .cta-sub {
+                font-size: 0.9rem;
+                padding: 0 1.5rem;
+            }
+
+            .cta-btn {
+                padding: 1rem 2.5rem;
+                font-size: 0.72rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cta-title {
+                font-size: 2.2rem;
+            }
+
+            .cta-sub {
+                font-size: 0.82rem;
+            }
+
+            .cta-btn {
+                width: 80%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="pre-title">Loading Experience</div>
+        <div class="pre-bar-wrap">
+            <div class="pre-bar" id="pre-bar"></div>
+        </div>
+        <div class="pre-pct" id="pre-pct">0%</div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div id="scroll-hint">
+        <div class="scroll-text">Scroll</div>
+        <div class="scroll-arrow"></div>
+    </div>
+
+    <!-- Sticky canvas section -->
+    <div id="sticky-wrap">
+        <div id="canvas-sticky">
+            <canvas id="earth-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- CTA overlay -->
+    <div id="cta">
+        <div class="cta-badge">🌱 WasteWise</div>
+        <h1 class="cta-title">Recycle Smarter.<br />Live Greener.</h1>
+        <p class="cta-sub">Upload a photo of your waste and instantly get AI-powered disposal guidance, carbon impact
+            scores, and green rewards.</p>
+        <button class="cta-btn" onclick="window.location.href='/home.html'">Get Started →</button>
+    </div>
+
+    <script>
+        const TOTAL_FRAMES = 96;
+        const canvas = document.getElementById('earth-canvas');
+        const ctx = canvas.getContext('2d');
+        const images = [];
+        let loaded = 0;
+        let currentFrame = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawFrame(currentFrame);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawFrame(idx) {
+            const img = images[idx];
+            if (!img || !img.complete) return;
+
+            const cw = canvas.width, ch = canvas.height;
+            const iw = img.naturalWidth, ih = img.naturalHeight;
+            const scale = Math.max(cw / iw, ch / ih);
+            const sw = iw * scale, sh = ih * scale;
+            const sx = (cw - sw) / 2, sy = (ch - sh) / 2;
+
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.drawImage(img, sx, sy, sw, sh);
+        }
+
+        // Preload
+        const bar = document.getElementById('pre-bar');
+        const pct = document.getElementById('pre-pct');
+        const preloader = document.getElementById('preloader');
+
+        for (let i = 0; i < TOTAL_FRAMES; i++) {
+            const img = new Image();
+            img.src = `/frames/frame_${i}.jpg`;
+            img.onload = () => {
+                loaded++;
+                const p = Math.round((loaded / TOTAL_FRAMES) * 100);
+                bar.style.width = p + '%';
+                pct.textContent = p + '%';
+                if (loaded === TOTAL_FRAMES) onAllLoaded();
+            };
+            img.onerror = () => {
+                // Count failed loads too so preloader doesn't hang
+                loaded++;
+                if (loaded === TOTAL_FRAMES) onAllLoaded();
+            };
+            images[i] = img;
+        }
+
+        function onAllLoaded() {
+            drawFrame(0);
+            setTimeout(() => {
+                preloader.classList.add('hidden');
+            }, 600);
+        }
+
+        // Scroll → frame
+        const cta = document.getElementById('cta');
+        const hint = document.getElementById('scroll-hint');
+        let hintHidden = false;
+
+        window.addEventListener('scroll', () => {
+            const wrap = document.getElementById('sticky-wrap');
+            const scrollTop = window.scrollY;
+            const maxScroll = wrap.scrollHeight - window.innerHeight;
+            const progress = Math.min(scrollTop / maxScroll, 1);
+
+            const frameIdx = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * TOTAL_FRAMES));
+            if (frameIdx !== currentFrame) {
+                currentFrame = frameIdx;
+                drawFrame(currentFrame);
+            }
+
+            // Hide scroll hint after first scroll
+            if (!hintHidden && scrollTop > 20) {
+                hint.classList.add('hidden');
+                hintHidden = true;
+            }
+
+            // Show CTA when 98% scrolled
+            if (progress >= 0.98) {
+                cta.classList.add('visible');
+            } else {
+                cta.classList.remove('visible');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

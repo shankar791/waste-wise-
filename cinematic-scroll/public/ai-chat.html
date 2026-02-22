@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WasteWise AI — Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #080f0b;
+            --bg2: #0d1610;
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --glass-hover: rgba(255, 255, 255, 0.07);
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.15);
+            --green-glow: rgba(34, 197, 94, 0.25);
+            --text: #e2ead6;
+            --muted: rgba(226, 234, 214, 0.4);
+            --muted2: rgba(226, 234, 214, 0.2);
+            --sidebar-w: 68px;
+            --history-w: 280px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── ANIMATED BACKGROUND ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 20% 20%, rgba(34, 197, 94, 0.08), transparent),
+                radial-gradient(ellipse 50% 40% at 80% 80%, rgba(34, 197, 94, 0.06), transparent),
+                radial-gradient(ellipse 40% 60% at 60% 10%, rgba(20, 130, 60, 0.05), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── TOP NAV ─── */
+        .topnav {
+            height: 58px;
+            display: flex;
+            align-items: center;
+            padding: 0 1.25rem;
+            background: rgba(8, 15, 11, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 50;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            margin-right: 0.5rem;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+            flex-shrink: 0;
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 0.25rem;
+            flex: 1;
+        }
+
+        .nav-item {
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-item:hover {
+            color: var(--text);
+            background: var(--glass);
+        }
+
+        .nav-item.active {
+            color: var(--green);
+            background: var(--green-dim);
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--muted);
+        }
+
+        .icon-btn:hover {
+            background: var(--glass-hover);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ade80, #16a34a);
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: white;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        /* ─── BODY LAYOUT ─── */
+        .app-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── LEFT SIDEBAR ─── */
+        .sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: rgba(8, 15, 11, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.25rem 0;
+            gap: 0.5rem;
+        }
+
+        .sidebar-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: transparent;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            color: var(--muted);
+            position: relative;
+        }
+
+        .sidebar-btn:hover {
+            background: var(--glass-hover);
+            border-color: var(--glass-border);
+            color: var(--text);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
+        }
+
+        .sidebar-btn.active {
+            background: var(--green-dim);
+            border-color: rgba(34, 197, 94, 0.25);
+            color: var(--green);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+
+        .sidebar-divider {
+            width: 30px;
+            height: 1px;
+            background: var(--glass-border);
+            margin: 0.25rem 0;
+        }
+
+        .sidebar-spacer {
+            flex: 1;
+        }
+
+        /* ─── MAIN CHAT ─── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 1.25rem;
+            gap: 1rem;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .ai-badge {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+        }
+
+        .chat-title h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .status-dot {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            color: var(--green);
+        }
+
+        .status-dot::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        /* Messages Panel */
+        .messages-panel {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            scroll-behavior: smooth;
+        }
+
+        .messages-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Message Row */
+        .msg-row {
+            display: flex;
+            gap: 0.75rem;
+            animation: msgIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .msg-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .msg-avatar.ai {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.1));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--green);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.15);
+        }
+
+        .msg-avatar.user {
+            background: linear-gradient(135deg, #4ade80, #16a34a);
+            color: white;
+        }
+
+        .msg-content {
+            max-width: 72%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .msg-row.user .msg-content {
+            align-items: flex-end;
+        }
+
+        .bubble {
+            padding: 0.9rem 1.15rem;
+            border-radius: 16px;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            position: relative;
+        }
+
+        .bubble.ai {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 4px 16px 16px 16px;
+            color: var(--text);
+        }
+
+        .bubble.user {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(34, 197, 94, 0.12));
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            border-radius: 16px 4px 16px 16px;
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.08);
+        }
+
+        /* Message Actions */
+        .msg-actions {
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .msg-row:hover .msg-actions {
+            opacity: 1;
+        }
+
+        .msg-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .msg-action-btn:hover {
+            background: var(--glass-hover);
+            color: var(--text);
+        }
+
+        .msg-action-btn.liked {
+            color: var(--green);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        /* Typing indicator */
+        .typing {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px 16px 16px 16px;
+            width: fit-content;
+        }
+
+        .typing span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.7);
+                opacity: 0.4;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ─── INPUT BAR ─── */
+        .input-area {
+            flex-shrink: 0;
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1rem 1rem 0.75rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-area:focus-within {
+            border-color: rgba(34, 197, 94, 0.3);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.06);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        #chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            resize: none;
+            line-height: 1.5;
+            min-height: 24px;
+            max-height: 120px;
+        }
+
+        #chat-input::placeholder {
+            color: var(--muted2);
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 0.6rem;
+        }
+
+        .input-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+
+        .input-icon:hover {
+            background: var(--glass-hover);
+            color: var(--text);
+        }
+
+        .input-spacer {
+            flex: 1;
+        }
+
+        .input-meta {
+            font-size: 0.7rem;
+            color: var(--muted2);
+            letter-spacing: 0.02em;
+        }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--green);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
+        }
+
+        .send-btn:hover {
+            background: #4ade80;
+            transform: scale(1.05);
+            box-shadow: 0 0 24px rgba(34, 197, 94, 0.5);
+        }
+
+        .send-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ─── HISTORY PANEL ─── */
+        .history-panel {
+            width: var(--history-w);
+            flex-shrink: 0;
+            background: rgba(8, 15, 11, 0.7);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .history-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--green-dim);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--green);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: rgba(34, 197, 94, 0.22);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+        }
+
+        .history-search {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .history-search input {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            outline: none;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            transition: border-color 0.2s;
+        }
+
+        .history-search input::placeholder {
+            color: var(--muted2);
+        }
+
+        .history-search input:focus {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem 1rem;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+        }
+
+        .history-group-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted2);
+            padding: 0.5rem 0.5rem 0.4rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-bottom: 0.2rem;
+        }
+
+        .history-item:hover {
+            background: var(--glass-hover);
+            border-color: var(--glass-border);
+        }
+
+        .history-item.active {
+            background: var(--green-dim);
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .history-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .history-item.active .history-icon {
+            color: var(--green);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .history-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-text p {
+            font-size: 0.78rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text);
+        }
+
+        .history-text span {
+            font-size: 0.68rem;
+            color: var(--muted2);
+        }
+
+        /* ─── MISC ─── */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .group-spacer {
+            margin-bottom: 0.5rem;
+        }
+
+        /* SVG icons inline */
+        svg {
+            display: block;
+        }
+
+        /* ─── RESPONSIVENESS ─── */
+        @media (max-width: 950px) {
+            .history-panel {
+                display: none;
+                /* Hide history on tablet/mobile by default */
+            }
+
+            .main {
+                padding: 1rem;
+            }
+
+            .msg-content {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .topnav {
+                height: auto;
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-items {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .nav-item {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .sidebar {
+                display: none;
+                /* Hide icon sidebar on mobile */
+            }
+
+            .messages-panel {
+                padding: 1rem;
+            }
+
+            .bubble {
+                font-size: 0.82rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .input-area {
+                padding: 0.75rem;
+            }
+
+            #chat-input {
+                font-size: 0.85rem;
+            }
+
+            .nav-right {
+                width: 100%;
+                justify-content: center;
+                border-top: 1px solid var(--glass-border);
+                padding-top: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ─── TOP NAV ─── -->
+    <nav class="topnav">
+        <div class="logo">W</div>
+        <div class="nav-items">
+            <div class="nav-item" onclick="setNav(this)">Dashboard</div>
+            <div class="nav-item" onclick="window.location.href='dashboard.html'">Reports</div>
+            <div class="nav-item active" onclick="setNav(this)">AI Chat</div>
+            <div class="nav-item" onclick="setNav(this)">Help</div>
+            <div class="nav-item" onclick="setNav(this)">Account</div>
+        </div>
+        <div class="nav-right">
+            <div class="icon-btn" title="Light mode">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </div>
+            <div class="icon-btn" title="Notifications" id="notif-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+            </div>
+            <div class="avatar">YS</div>
+        </div>
+    </nav>
+
+    <!-- ─── BODY ─── -->
+    <div class="app-body">
+
+        <!-- ─── LEFT SIDEBAR ─── -->
+        <aside class="sidebar">
+            <div class="sidebar-btn active" title="Chat">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+            </div>
+            <div class="sidebar-btn" title="Analytics">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+            </div>
+            <div class="sidebar-btn" title="Files">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-btn" title="Explore">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </div>
+            <div class="sidebar-btn" title="Datasets">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+            </div>
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-btn" title="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+            </div>
+            <div class="sidebar-btn" title="Logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+            </div>
+        </aside>
+
+        <!-- ─── MAIN CHAT AREA ─── -->
+        <main class="main">
+
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-title">
+                    <div class="ai-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+                            <path
+                                d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
+                            <circle cx="9" cy="14" r="1" fill="#22c55e" stroke="none" />
+                            <circle cx="15" cy="14" r="1" fill="#22c55e" stroke="none" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>AI Chat</h2>
+                        <div class="status-dot">Online · GPT-4o</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <div class="icon-btn" title="Search in chat">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </div>
+                    <div class="icon-btn" title="Options">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="19" cy="12" r="1" />
+                            <circle cx="5" cy="12" r="1" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="messages-panel" id="messages">
+
+                <!-- AI Message 1 -->
+                <div class="msg-row">
+                    <div class="msg-avatar ai">AI</div>
+                    <div class="msg-content">
+                        <div class="bubble ai">Hello! I'm your WasteWise AI assistant. I can help you with waste
+                            management strategies, recycling insights, sustainability reports, and more. How can I help
+                            you today?</div>
+                        <div class="msg-actions">
+                            <div class="msg-action-btn" title="Copy" onclick="copyMsg(this)">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Like" onclick="toggleLike(this)">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Dislike">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Regenerate">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10" />
+                                    <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Message 1 -->
+                <div class="msg-row user">
+                    <div class="msg-avatar user">YS</div>
+                    <div class="msg-content">
+                        <div class="bubble user">What's the current carbon impact of improper plastic waste disposal
+                            globally, and what are the top 3 most effective alternatives?</div>
+                        <div class="msg-actions" style="justify-content: flex-end;">
+                            <div class="msg-action-btn" title="Copy" onclick="copyMsg(this)">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Message 2 -->
+                <div class="msg-row">
+                    <div class="msg-avatar ai">AI</div>
+                    <div class="msg-content">
+                        <div class="bubble ai">
+                            Great question. Improper plastic disposal generates approximately <strong
+                                style="color: var(--green);">850 million metric tons of CO₂ equivalent</strong> annually
+                            — roughly 2.4% of global emissions.<br><br>
+                            The top 3 most effective alternatives are:<br><br>
+                            <strong>1. Biodegradable Polymers</strong> — PHA and PLA-based plastics decompose naturally
+                            and reduce landfill methane by up to 70%.<br><br>
+                            <strong>2. Extended Producer Responsibility (EPR)</strong> — Holding manufacturers
+                            accountable has reduced single-use plastic in 34 countries by an average of 40%.<br><br>
+                            <strong>3. Chemical Recycling</strong> — Pyrolysis and gasification converts unrecyclable
+                            plastics into fuel, recovering up to 91% of energy content.
+                        </div>
+                        <div class="msg-actions">
+                            <div class="msg-action-btn" title="Copy" onclick="copyMsg(this)">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn liked" title="Liked">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Dislike">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Regenerate" onclick="showTyping()">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10" />
+                                    <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+                                </svg>
+                            </div>
+                            <div class="msg-action-btn" title="Download">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing indicator (hidden by default) -->
+                <div id="typing-indicator" class="msg-row" style="display:none;">
+                    <div class="msg-avatar ai">AI</div>
+                    <div class="typing">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-area">
+                <div class="input-row">
+                    <textarea id="chat-input" rows="1" placeholder="Ask a question or make a request…"
+                        oninput="autoGrow(this)" onkeydown="handleKey(event)"></textarea>
+                </div>
+                <div class="input-actions">
+                    <div class="input-icon" title="Attach file"
+                        onclick="document.getElementById('attach-input').click()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                    </div>
+                    <input type="file" id="attach-input" style="display:none" />
+                    <div class="input-icon" title="Voice input" id="voice-btn" onclick="toggleVoice(this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                    </div>
+                    <div class="input-spacer"></div>
+                    <span class="input-meta" id="char-count">0 / 4000</span>
+                    <button class="send-btn" onclick="sendMessage()" title="Send">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="22" y1="2" x2="11" y2="13" />
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ─── HISTORY PANEL ─── -->
+        <aside class="history-panel">
+            <div class="history-header">
+                <span class="history-title">History Chat</span>
+                <div class="new-chat-btn" onclick="newChat()">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    New Chat
+                </div>
+            </div>
+
+            <div class="history-search">
+                <input type="text" placeholder="Search conversations…" oninput="filterHistory(this.value)" />
+            </div>
+
+            <div class="history-list" id="history-list">
+
+                <div class="history-group-label">Today</div>
+                <div class="history-item active" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Carbon impact of plastic disposal</p>
+                        <span>Just now</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Last week, mortgage rates rose s…</p>
+                        <span>2h ago</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Anaerobic digestion overview</p>
+                        <span>5h ago</span>
+                    </div>
+                </div>
+
+                <div class="history-group-label group-spacer">5 Days Ago</div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">📊</div>
+                    <div class="history-text">
+                        <p>Waste diversion rate analysis</p>
+                        <span>Feb 15</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Three weeks ago, rates increased…</p>
+                        <span>Feb 15</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">📁</div>
+                    <div class="history-text">
+                        <p>EPR policy comparison 2025</p>
+                        <span>Feb 14</span>
+                    </div>
+                </div>
+
+                <div class="history-group-label group-spacer">7 Days Ago</div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Biodegradable material costs</p>
+                        <span>Feb 13</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>January saw rates rise quickly fr…</p>
+                        <span>Feb 13</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">📊</div>
+                    <div class="history-text">
+                        <p>Community recycling benchmarks</p>
+                        <span>Feb 12</span>
+                    </div>
+                </div>
+
+                <div class="history-group-label group-spacer">Last Month</div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Pyrolysis vs. mechanical recycling</p>
+                        <span>Jan 30</span>
+                    </div>
+                </div>
+                <div class="history-item" onclick="selectHistory(this)">
+                    <div class="history-icon">💬</div>
+                    <div class="history-text">
+                        <p>Sustainable packaging alternatives</p>
+                        <span>Jan 28</span>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        // ─── Auto-grow textarea ───
+        function autoGrow(el) {
+            el.style.height = '24px';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+            document.getElementById('char-count').textContent = el.value.length + ' / 4000';
+        }
+
+        // ─── Keyboard shortcut ───
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // ─── Send Message ───
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const messages = document.getElementById('messages');
+
+            // Add user bubble
+            const userRow = document.createElement('div');
+            userRow.className = 'msg-row user';
+            userRow.innerHTML = `
+      <div class="msg-avatar user">YS</div>
+      <div class="msg-content">
+        <div class="bubble user">${escapeHtml(text)}</div>
+        <div class="msg-actions" style="justify-content:flex-end;">
+          <div class="msg-action-btn" title="Copy" onclick="copyMsg(this)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </div>
+        </div>
+      </div>`;
+
+            // Insert before typing indicator
+            const typingEl = document.getElementById('typing-indicator');
+            messages.insertBefore(userRow, typingEl);
+
+            input.value = '';
+            input.style.height = '24px';
+            document.getElementById('char-count').textContent = '0 / 4000';
+
+            // Show typing
+            typingEl.style.display = 'flex';
+            messages.scrollTop = messages.scrollHeight;
+
+            // Simulate AI reply
+            setTimeout(() => {
+                typingEl.style.display = 'none';
+
+                const responses = [
+                    "That's a great point. Based on current sustainability data, the best approach involves a combination of technical innovation and behavioral change at the community level. Would you like me to break down specific implementation strategies?",
+                    "Excellent question! The data shows a significant correlation between early adoption of circular economy principles and long-term environmental impact reduction — often showing a 35–60% improvement over traditional linear models.",
+                    "Based on WasteWise's analysis, the most impactful interventions tend to be those that target the upstream production phase rather than downstream waste management. Shall I generate a detailed report on this?",
+                    "The latest research from 2025 indicates that AI-driven waste sorting systems achieve 94.7% accuracy across 12 material categories — significantly higher than manual sorting at 71%. Would you like specifics on deployment costs and ROI?"
+                ];
+
+                const aiRow = document.createElement('div');
+                aiRow.className = 'msg-row';
+                aiRow.innerHTML = `
+        <div class="msg-avatar ai">AI</div>
+        <div class="msg-content">
+          <div class="bubble ai">${responses[Math.floor(Math.random() * responses.length)]}</div>
+          <div class="msg-actions">
+            <div class="msg-action-btn" title="Copy" onclick="copyMsg(this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+            <div class="msg-action-btn" title="Like" onclick="toggleLike(this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
+            <div class="msg-action-btn" title="Regenerate" onclick="showTyping()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg></div>
+          </div>
+        </div>`;
+                messages.insertBefore(aiRow, typingEl);
+                messages.scrollTop = messages.scrollHeight;
+
+                // Add to history
+                addHistoryItem(text);
+            }, 1400 + Math.random() * 600);
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ─── Like toggle ───
+        function toggleLike(btn) {
+            btn.classList.toggle('liked');
+            const svg = btn.querySelector('path');
+            if (btn.classList.contains('liked')) {
+                btn.querySelector('svg').setAttribute('fill', 'currentColor');
+            } else {
+                btn.querySelector('svg').setAttribute('fill', 'none');
+            }
+        }
+
+        // ─── Copy message ───
+        function copyMsg(btn) {
+            const bubble = btn.closest('.msg-content').querySelector('.bubble');
+            navigator.clipboard.writeText(bubble.innerText).then(() => {
+                btn.style.color = 'var(--green)';
+                setTimeout(() => btn.style.color = '', 1500);
+            });
+        }
+
+        // ─── Nav active ───
+        function setNav(el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // ─── New Chat ───
+        function newChat() {
+            const messages = document.getElementById('messages');
+            const typingEl = document.getElementById('typing-indicator');
+
+            // Clear all except typing indicator
+            while (messages.firstChild && messages.firstChild !== typingEl) {
+                messages.removeChild(messages.firstChild);
+            }
+
+            const welcomeRow = document.createElement('div');
+            welcomeRow.className = 'msg-row';
+            welcomeRow.innerHTML = `
+      <div class="msg-avatar ai">AI</div>
+      <div class="msg-content">
+        <div class="bubble ai">New conversation started! I'm ready to help with any waste management or sustainability questions. What would you like to explore?</div>
+      </div>`;
+            messages.insertBefore(welcomeRow, typingEl);
+
+            document.querySelectorAll('.history-item').forEach(h => h.classList.remove('active'));
+        }
+
+        // ─── Select History ───
+        function selectHistory(el) {
+            document.querySelectorAll('.history-item').forEach(h => h.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // ─── Add to history ───
+        function addHistoryItem(text) {
+            const list = document.getElementById('history-list');
+            const groupLabel = list.querySelector('.history-group-label');
+
+            const item = document.createElement('div');
+            item.className = 'history-item active';
+            item.onclick = function () { selectHistory(this); };
+            item.innerHTML = `
+      <div class="history-icon">💬</div>
+      <div class="history-text">
+        <p>${escapeHtml(text.length > 30 ? text.slice(0, 30) + '…' : text)}</p>
+        <span>Just now</span>
+      </div>`;
+
+            document.querySelectorAll('.history-item').forEach(h => h.classList.remove('active'));
+            list.insertBefore(item, groupLabel.nextSibling);
+        }
+
+        // ─── Filter History ───
+        function filterHistory(query) {
+            document.querySelectorAll('.history-item').forEach(item => {
+                const text = item.querySelector('p')?.textContent.toLowerCase() || '';
+                item.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        // ─── Voice toggle ───
+        function toggleVoice(btn) {
+            btn.classList.toggle('active-voice');
+            if (btn.classList.contains('active-voice')) {
+                btn.style.color = 'var(--green)';
+                btn.style.borderColor = 'rgba(34,197,94,0.4)';
+                btn.style.boxShadow = '0 0 12px rgba(34,197,94,0.2)';
+            } else {
+                btn.style.color = '';
+                btn.style.borderColor = '';
+                btn.style.boxShadow = '';
+            }
+        }
+
+        // ─── Simulate typing ───
+        function showTyping() {
+            const typingEl = document.getElementById('typing-indicator');
+            typingEl.style.display = 'flex';
+            const messages = document.getElementById('messages');
+            messages.scrollTop = messages.scrollHeight;
+            setTimeout(() => { typingEl.style.display = 'none'; }, 2000);
+        }
+
+        // ─── Auto focus input ───
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('chat-input').focus();
+        });
+    </script>
+
+</body>
+
+</html>

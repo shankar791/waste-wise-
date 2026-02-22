@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/waste_data.db:/app/backend/waste_data.db
+      - ./backend/uploads:/app/backend/uploads
+    environment:
+      - PORT=8000
+    restart: always

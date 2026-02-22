@@ -1,0 +1,1217 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WasteWise — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* â”€â”€â”€ BACKGROUND â”€â”€â”€ */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: url('glass.png') center center / cover no-repeat;
+        }
+
+        .bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 30, 10, 0.18);
+        }
+
+        /* â”€â”€â”€ LAYOUT â”€â”€â”€ */
+        .page {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* â”€â”€â”€ HEADER â”€â”€â”€ */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+        }
+
+        .logo {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(10, 30, 10, 0.85);
+        }
+
+        .glass-nav {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(40px) saturate(1.8);
+            -webkit-backdrop-filter: blur(40px) saturate(1.8);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 100px;
+            padding: 0.45rem 0.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(10, 30, 10, 0.7);
+            padding: 0.45rem 1rem;
+            border-radius: 100px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.35);
+            color: rgba(10, 30, 10, 0.9);
+        }
+
+        .nav-link.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #166534;
+        }
+
+        /* User pill */
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem 0.35rem 0.45rem;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 100px;
+        }
+
+        .user-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-email-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(10, 30, 10, 0.85);
+            white-space: nowrap;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .online-dot {
+            width: 7px;
+            height: 7px;
+            background: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        /* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */
+        .main {
+            flex: 1;
+            padding: 1.5rem 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Welcome strip */
+        .welcome-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .welcome-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: rgba(10, 30, 10, 0.88);
+        }
+
+        .welcome-sub {
+            font-size: 0.82rem;
+            color: rgba(30, 50, 20, 0.55);
+            margin-top: 0.2rem;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 100px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(10, 30, 10, 0.7);
+            backdrop-filter: blur(20px);
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* â”€â”€â”€ SUBMISSION SUMMARY CARD â”€â”€â”€ */
+        .summary-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(40px) saturate(1.6);
+            -webkit-backdrop-filter: blur(40px) saturate(1.6);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 20px;
+            padding: 1.4rem 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .summary-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .summary-info {
+            flex: 1;
+        }
+
+        .summary-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(30, 50, 20, 0.45);
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: rgba(10, 30, 10, 0.85);
+        }
+
+        .summary-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(30, 50, 20, 0.12);
+        }
+
+        /* â”€â”€â”€ STATS GRID â”€â”€â”€ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 18px;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.9rem;
+        }
+
+        .stat-badge {
+            padding: 0.25rem 0.65rem;
+            border-radius: 100px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #166534;
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #1d4ed8;
+        }
+
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #92400e;
+        }
+
+        .badge-rose {
+            background: rgba(244, 63, 94, 0.15);
+            color: #9f1239;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+
+        .icon-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563eb;
+        }
+
+        .icon-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #d97706;
+        }
+
+        .icon-rose {
+            background: rgba(244, 63, 94, 0.15);
+            color: #e11d48;
+        }
+
+        .stat-number {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: rgba(10, 30, 10, 0.88);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: rgba(30, 50, 20, 0.5);
+            margin-top: 0.3rem;
+        }
+
+        .stat-trend {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #16a34a;
+            margin-top: 0.5rem;
+        }
+
+        /* â”€â”€â”€ HIGHLIGHT CARDS â”€â”€â”€ */
+        .highlight-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .highlight-card {
+            border-radius: 20px;
+            padding: 1.4rem 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            position: relative;
+            overflow: hidden;
+            animation: hlPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes hlPop {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .hl-product {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1.5px solid rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+        }
+
+        .hl-carbon {
+            background: rgba(251, 146, 60, 0.12);
+            border: 1.5px solid rgba(251, 146, 60, 0.45);
+            box-shadow: 0 0 40px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+        }
+
+        .hl-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .hl-icon-green {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+        }
+
+        .hl-icon-amber {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+        }
+
+        .hl-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .hl-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(30, 50, 20, 0.45);
+            margin-bottom: 0.5rem;
+        }
+
+        .hl-value {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            color: rgba(10, 30, 10, 0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hl-carbon .hl-value {
+            color: #c2410c;
+        }
+
+        .hl-sub {
+            font-size: 0.72rem;
+            color: rgba(30, 50, 20, 0.5);
+            margin-top: 0.4rem;
+        }
+
+        .hl-glow-dot {
+            position: absolute;
+            right: 1.4rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .glow-green {
+            background: #22c55e;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+        }
+
+        .glow-amber {
+            background: #f97316;
+            box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+            }
+        }
+
+        /* â”€â”€â”€ BOTTOM ROW â”€â”€â”€ */
+        .bottom-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 18px;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        }
+
+        .panel-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: rgba(10, 30, 10, 0.7);
+            margin-bottom: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid rgba(30, 50, 20, 0.07);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .activity-text {
+            font-size: 0.78rem;
+            color: rgba(10, 30, 10, 0.7);
+            flex: 1;
+        }
+
+        .activity-time {
+            font-size: 0.65rem;
+            color: rgba(30, 50, 20, 0.4);
+        }
+
+        .tip-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(30, 50, 20, 0.07);
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .tip-num {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .tip-text {
+            font-size: 0.78rem;
+            color: rgba(10, 30, 10, 0.7);
+            line-height: 1.5;
+        }
+
+        /* â”€â”€â”€ WASTE ANALYSIS REPORT â”€â”€â”€ */
+        .report-section {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 1.4rem 1.8rem 1.6rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        }
+
+        .report-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+        }
+
+        .report-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(10, 30, 10, 0.75);
+        }
+
+        .report-badge {
+            padding: 0.25rem 0.8rem;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 100px;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #166534;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+        }
+
+        @media(max-width:900px) {
+            .report-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .report-item {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
+        }
+
+        .report-item-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(30, 50, 20, 0.4);
+            margin-bottom: 0.35rem;
+        }
+
+        .report-item-value {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: rgba(10, 30, 10, 0.85);
+            line-height: 1.3;
+        }
+
+        .report-item-value.accent-green {
+            color: #15803d;
+        }
+
+        .report-item-value.accent-amber {
+            color: #b45309;
+        }
+
+        .report-item-value.accent-blue {
+            color: #1d4ed8;
+        }
+
+        .report-item-value.accent-rose {
+            color: #be123c;
+        }
+
+        .report-divider {
+            height: 1px;
+            background: rgba(30, 50, 20, 0.08);
+            margin: 1rem 0;
+        }
+
+        .report-impact {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 163, 74, 0.15));
+            border: 1.5px solid rgba(34, 197, 94, 0.5);
+            border-radius: 18px;
+            padding: 1.25rem 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            animation: glowImpact 3s ease-in-out infinite;
+        }
+
+        @keyframes glowImpact {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(34, 197, 94, 0.15);
+                border-color: rgba(34, 197, 94, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(34, 197, 94, 0.3);
+                border-color: rgba(34, 197, 94, 0.8);
+            }
+        }
+
+        .report-impact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .report-impact-text {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(10, 30, 10, 0.8);
+            line-height: 1.5;
+        }
+
+        .report-impact-text strong {
+            color: #15803d;
+        }
+
+        /* ─── RESPONSIVENESS ─── */
+        @media (max-width: 900px) {
+            .header {
+                padding: 1rem 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .glass-nav {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                padding: 0.3rem;
+                border-radius: 20px;
+            }
+
+            .nav-link {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.65rem;
+            }
+
+            .user-pill {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .main {
+                padding: 1rem 1.5rem;
+            }
+
+            .summary-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .summary-divider {
+                width: 80%;
+                height: 1px;
+            }
+
+            .highlight-row {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .welcome-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .report-impact {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg"></div>
+
+    <div class="page">
+
+        <!-- Header -->
+        <header class="header">
+            <span class="logo">WasteWise</span>
+
+            <nav class="glass-nav">
+                <a href="#" class="nav-link active">Dashboard</a>
+                <a href="shop.html" class="nav-link">Green Rewards</a>
+                <a href="greenpoints-map.html" class="nav-link">Campaigns</a>
+                <a href="#" class="nav-link">Reports</a>
+                <a href="ai-chat.html" class="nav-link">AI Assistant</a>
+            </nav>
+
+            <div class="user-pill">
+                <a href="shop.html" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    Rewards
+                </a>
+                <span class="user-email-text" id="dash-email">user@email.com</span>
+                <div class="online-dot"></div>
+            </div>
+        </header>
+
+        <!-- Main -->
+        <main class="main">
+
+            <!-- Welcome -->
+            <div class="welcome-row">
+                <div>
+                    <div class="welcome-title">Welcome back ðŸ‘‹</div>
+                    <div class="welcome-sub">Here's your waste analysis overview.</div>
+                </div>
+                <a href="index.html" class="back-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                    Back to Home
+                </a>
+            </div>
+
+            <!-- Submission Summary -->
+            <div class="summary-card">
+                <div class="summary-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                </div>
+                <div class="summary-info">
+                    <div class="summary-label">Image Submitted</div>
+                    <div class="summary-value" id="dash-file">No file</div>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-info">
+                    <div class="summary-label">Weight Entered</div>
+                    <div class="summary-value" id="dash-weight">— kg</div>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-info">
+                    <div class="summary-label">Status</div>
+                    <div class="summary-value" style="color:#16a34a">âœ“ Analysed</div>
+                </div>
+            </div>
+
+            <!-- Highlight Cards -->
+            <div class="highlight-row">
+                <!-- Product Detected -->
+                <div class="highlight-card hl-product">
+                    <div class="hl-icon hl-icon-green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        </svg>
+                    </div>
+                    <div class="hl-body">
+                        <div class="hl-label">Product Detected</div>
+                        <div class="hl-value" id="hl-product">Scanningâ€¦</div>
+                        <div class="hl-sub" id="hl-product-sub">Identified from uploaded image</div>
+                    </div>
+                    <div class="hl-glow-dot glow-green"></div>
+                </div>
+
+                <!-- Carbon Emissions -->
+                <div class="highlight-card hl-carbon">
+                    <div class="hl-icon hl-icon-amber">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <path d="M12 3c1.5 2 3 3.5 3 5.5A3 3 0 0 1 9 8.5C9 6.5 10.5 5 12 3z" />
+                            <path d="M18.5 8c1 1.5 1.5 3 1.5 4.5a4 4 0 0 1-4 4" />
+                        </svg>
+                    </div>
+                    <div class="hl-body">
+                        <div class="hl-label">Carbon Emissions</div>
+                        <div class="hl-value" id="hl-carbon">— kg COâ‚‚</div>
+                        <div class="hl-sub" id="hl-carbon-sub">Estimated from weight entered</div>
+                    </div>
+                    <div class="hl-glow-dot glow-amber" style="animation-name:pulseAmber"></div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-badge badge-green">Recycled</span>
+                        <div class="stat-icon icon-green">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10" />
+                                <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-number">2.4<span style="font-size:1rem">kg</span></div>
+                    <div class="stat-label">Waste Recycled Today</div>
+                    <div class="stat-trend">â†‘ 12% from yesterday</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-badge badge-blue">Carbon</span>
+                        <div class="stat-icon icon-blue">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12a10 10 0 0 1 20 0" />
+                                <path d="M12 2v4" />
+                                <path d="m4.93 4.93 2.83 2.83" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-number">1.8<span style="font-size:1rem">kg</span></div>
+                    <div class="stat-label">COâ‚‚ Saved</div>
+                    <div class="stat-trend">â†‘ 8% this week</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-badge badge-amber">Rewards</span>
+                        <div class="stat-icon icon-amber">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="6" />
+                                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-number">340</div>
+                    <div class="stat-label">Green Points Earned</div>
+                    <div class="stat-trend">â†‘ 20 new today</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-badge badge-rose">Streak</span>
+                        <div class="stat-icon icon-rose">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="dash-streak">—<span style="font-size:1rem">d</span></div>
+                    <div class="stat-label">Active Streak</div>
+                    <div class="stat-trend" id="dash-streak-sub">Keep it up! ??</div>
+                </div>
+            </div>
+
+            <!-- Bottom panels -->
+            <div class="bottom-row">
+                <div class="panel">
+                    <div class="panel-title">Recent Activity</div>
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background:#22c55e"></div>
+                        <span class="activity-text">Image analysed — Plastic bottle detected</span>
+                        <span class="activity-time">Just now</span>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background:#3b82f6"></div>
+                        <span class="activity-text">20 Green Points awarded</span>
+                        <span class="activity-time">2 min ago</span>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background:#f59e0b"></div>
+                        <span class="activity-text">Campaign joined — Clean City Drive</span>
+                        <span class="activity-time">1 hr ago</span>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background:#22c55e"></div>
+                        <span class="activity-text">Report downloaded — Weekly Summary</span>
+                        <span class="activity-time">Yesterday</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Eco Tips for You</div>
+                    <div class="tip-item">
+                        <div class="tip-num">1</div>
+                        <div class="tip-text">Rinse plastic bottles before recycling — contamination reduces recycling
+                            rates by 30%.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-num">2</div>
+                        <div class="tip-text">Composting food waste reduces methane emissions from landfills
+                            significantly.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-num">3</div>
+                        <div class="tip-text">Carry a reusable bag — each one prevents ~700 plastic bags over its
+                            lifetime.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- â”€â”€â”€ WASTE ANALYSIS REPORT â”€â”€â”€ -->
+            <div class="report-section">
+                <div class="report-header">
+                    <span class="report-title">?? Waste Analysis Report</span>
+                    <span class="report-badge">AI Simulated</span>
+                </div>
+
+                <div class="report-grid">
+                    <div class="report-item">
+                        <div class="report-item-label">Waste Type</div>
+                        <div class="report-item-value" id="r-waste-type">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Sub-Category</div>
+                        <div class="report-item-value" id="r-subcategory">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Recycle Status</div>
+                        <div class="report-item-value accent-green" id="r-recycle-status">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Energy Potential</div>
+                        <div class="report-item-value accent-amber" id="r-energy">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Recommended Treatment</div>
+                        <div class="report-item-value" id="r-treatment">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Disposal Instructions</div>
+                        <div class="report-item-value" id="r-disposal">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Carbon Saved</div>
+                        <div class="report-item-value accent-green" id="r-carbon-saved">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Trees Equivalent</div>
+                        <div class="report-item-value accent-green" id="r-trees">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Sustainability Score</div>
+                        <div class="report-item-value accent-blue" id="r-sustainability">—</div>
+                    </div>
+                    <div class="report-item">
+                        <div class="report-item-label">Reward Points</div>
+                        <div class="report-item-value accent-amber" id="r-reward-pts">—</div>
+                    </div>
+                </div>
+
+                <div class="report-divider"></div>
+
+                <!-- Impact message -->
+                <div class="report-impact">
+                    <div class="report-impact-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <div class="report-impact-text" id="r-impact-msg">Analysing your submissionâ€¦</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+
+        // â”€â”€ Read from localStorage (written by index.html after POST /user/upload) â”€â”€
+        const result = JSON.parse(localStorage.getItem('ww_result') || '{}');
+        const file = localStorage.getItem('ww_file') || 'No file';
+        const weight = parseFloat(localStorage.getItem('ww_weight')) || 0;
+        const email = localStorage.getItem('ww_email') || 'user@email.com';
+
+        // Summary bar
+        document.getElementById('dash-file').textContent = file;
+        document.getElementById('dash-weight').textContent = weight > 0 ? weight + ' kg' : '— kg';
+        document.getElementById('dash-email').textContent = email;
+
+        // Populate all fields from real API response
+        setTimeout(() => {
+            const co2 = result.carbon_saved != null ? result.carbon_saved : '—';
+            const trees = result.trees_equivalent != null ? result.trees_equivalent : '—';
+            const pts = result.reward_points != null ? result.reward_points : '—';
+            const score = result.sustainability_score != null ? result.sustainability_score : '—';
+            const sub = result.subcategory || '—';
+
+            // Highlight cards
+            document.getElementById('hl-product').textContent = sub;
+            document.getElementById('hl-product-sub').textContent = result.waste_type ? result.waste_type + ' waste' : 'Identified from image';
+            document.getElementById('hl-carbon').textContent = co2 !== '—' ? co2 + ' kg COâ‚‚' : '— kg COâ‚‚';
+            document.getElementById('hl-carbon-sub').textContent = weight > 0 ? 'Based on ' + weight + ' kg input weight' : 'Enter weight for estimate';
+
+            // Analysis report grid
+            document.getElementById('r-waste-type').textContent = result.waste_type || '—';
+            document.getElementById('r-subcategory').textContent = result.subcategory || '—';
+            document.getElementById('r-recycle-status').textContent = result.recyclable_status || '—';
+            document.getElementById('r-energy').textContent = result.energy_potential || '—';
+            document.getElementById('r-treatment').textContent = result.recommended_treatment || '—';
+            document.getElementById('r-disposal').textContent = result.disposal_instructions || '—';
+            document.getElementById('r-carbon-saved').textContent = co2 !== '—' ? co2 + ' kg COâ‚‚' : '—';
+            document.getElementById('r-trees').textContent = trees !== '—' ? '?? ' + trees + ' trees/yr' : '—';
+            document.getElementById('r-sustainability').textContent = score !== '—' ? score + '/100' : '—';
+            document.getElementById('r-reward-pts').textContent = pts !== '—' ? '?? +' + pts + ' pts' : '—';
+
+            // Format the highlight message requested by user
+            if (co2 !== '—' && trees !== '—') {
+                document.getElementById('r-impact-msg').innerHTML = `You reduced <strong>${co2} kg COâ‚‚</strong> — equivalent to planting <strong>${trees} trees</strong> ??`;
+            } else {
+                document.getElementById('r-impact-msg').textContent = result.impact_message || 'Submit a waste image to see your eco impact.';
+            }
+        }, 300);
+
+        // â”€â”€ Amber pulse keyframe â”€â”€
+        const _s = document.createElement('style');
+        _s.textContent = '@keyframes pulseAmber{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0.5)}50%{box-shadow:0 0 0 8px rgba(249,115,22,0)}}';
+        document.head.appendChild(_s);
+
+        // --- Leaderboard ---
+        async function loadLeaderboard() {
+            try {
+                const data = await fetch(API + '/leaderboard').then(r => r.json());
+                const panel = document.querySelector('.panel');
+                panel.innerHTML = '<div class="panel-title">?? Leaderboard</div>' +
+                    (data.length ? data.map(r => `<div class="activity-item">
+                        <div class="activity-dot" style="background:#22c55e"></div>
+                        <span class="activity-text">#${r.rank} &nbsp; ${r.email}</span>
+                        <span class="activity-time">${r.points} pts</span>
+                    </div>`).join('') : '<div class="activity-text" style="padding:0.5rem 0;opacity:.5">No submissions yet.</div>');
+            } catch (e) { }
+        }
+
+        // --- Rewards ---
+        async function loadRewards() {
+            try {
+                const data = await fetch(API + '/rewards').then(r => r.json());
+                const p = document.querySelectorAll('.panel')[1];
+                p.innerHTML = '<a href="shop.html" style="text-decoration:none;color:inherit;"><div class="panel-title"> Green Rewards</div></a>' +
+                    (data.length ? data.map((r, i) => `<div class="tip-item">
+                        <div class="tip-num">${i + 1}</div>
+                        <div class="tip-text"><strong>${r[0]}</strong> — ${r[1]} pts required</div>
+                    </div>`).join('') : '<div class="tip-text" style="opacity:.5">No rewards available yet.</div>');
+            } catch (e) { }
+        }
+
+        // --- Campaigns ---
+        async function loadCampaigns() {
+            try {
+                const data = await fetch(API + '/campaigns').then(r => r.json());
+                const p = document.querySelector('.panel');
+                p.innerHTML = '<div class="panel-title">?? Active Campaigns</div>' +
+                    (data.length ? data.map(c => `<div class="activity-item">
+                        <div class="activity-dot" style="background:#3b82f6"></div>
+                        <span class="activity-text">${c[0]}</span>
+                        <span class="activity-time">${c[1]}</span>
+                    </div>`).join('') : '<div class="activity-text" style="opacity:.5">No campaigns active.</div>');
+            } catch (e) { }
+        }
+
+        // â”€â”€ Streak â”€â”€
+        async function loadStreak() {
+            try {
+                const res = await fetch(API + '/user/streak?email=' + email);
+                const data = await res.json();
+                const streakNum = data.streak || 1; // Default to 1 if no logs yet but they uploaded
+                document.getElementById('dash-streak').innerHTML = `${streakNum}<span style="font-size:1rem">d</span>`;
+                if (streakNum > 3) {
+                    document.getElementById('dash-streak-sub').textContent = 'You are on fire! ??';
+                }
+            } catch (e) { }
+        }
+
+        // Nav tab routing
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                const t = link.textContent.trim().toLowerCase();
+                if (t.includes('reward')) window.location.href = 'shop.html';
+                if (t.includes('campaign')) window.location.href = 'greenpoints-map.html';
+                if (t.includes('ai assistant')) window.location.href = 'ai-chat.html';
+                if (t.includes('report')) loadLeaderboard();
+            });
+        });
+
+        // Auto-load data on page open
+        loadLeaderboard();
+        loadStreak();
+    </script>
+
+</body>
+
+</html>

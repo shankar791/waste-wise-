@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenPoints Map — Green Gravity</title>
+    <meta name="description"
+        content="Find nearby recycling and waste collection points on the GreenPoints interactive map." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <!-- Google Maps API (Placeholder Key) -->
+    <script>
+        (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b[q] || (b[q] = {}), f = d.hasOwnProperty; const e = n => { if (!n) return; let r = m.createElement("script"); r.src = n; r.onerror = () => console.error(p + " could not load."); r.onload = () => console.log(p + " loaded."); m.head.append(r) }; if (!d[l]) d[l] = (f, ...n) => e(`https://maps.${c}apis.com/maps/api/js?key=YOUR_API_KEY_HERE&v=beta&libraries=${f}${n.length ? "," + n.join(",") : ""}`); if (!d[l]) console.error(p + " bootstrap failed.") })({});
+    </script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #020d07;
+            --primary: #00ff87;
+            --primary-dim: rgba(0, 255, 135, 0.15);
+            --teal: #0f9b6a;
+            --surface: rgba(4, 20, 10, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(0, 255, 135, 0.35);
+            --text: #e8f5ee;
+            --text-muted: rgba(232, 245, 238, 0.5);
+            --glow: 0 0 24px rgba(0, 255, 135, 0.35);
+            --radius: 18px;
+            --font: 'Outfit', sans-serif;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ─── MAP CONTAINER ─── */
+        #map {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* Dark tint overlay on map edges */
+        #map-vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 50%, rgba(2, 13, 7, 0.5) 100%);
+        }
+
+        /* ─── NAVBAR ─── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(2, 13, 7, 0.8);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--primary), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.9rem;
+            color: #000;
+            box-shadow: var(--glow);
+        }
+
+        .nav-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .nav-title span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .nav-link {
+            padding: 0.4rem 0.9rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+            background: var(--primary-dim);
+            border-color: var(--border-glow);
+        }
+
+        @media (max-width: 700px) {
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* ─── FILTER BAR ─── */
+        .filter-bar {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 100px;
+            background: rgba(4, 20, 10, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+
+        .filter-pill {
+            padding: 0.4rem 1rem;
+            border-radius: 100px;
+            background: transparent;
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font);
+        }
+
+        .filter-pill:hover,
+        .filter-pill.active {
+            background: var(--primary-dim);
+            border-color: var(--border-glow);
+            color: var(--primary);
+        }
+
+        @media (max-width: 560px) {
+            .filter-pill {
+                padding: 0.35rem 0.7rem;
+                font-size: 0.72rem;
+            }
+        }
+
+        /* ─── STATUS CARD ─── */
+        .status-card {
+            position: fixed;
+            top: 148px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            padding: 0.55rem 1.2rem;
+            border-radius: 100px;
+            background: rgba(4, 20, 10, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .status-card.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* ─── INFO PANEL ─── */
+        .info-panel {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 200;
+            width: min(360px, calc(100vw - 4rem));
+            background: var(--surface);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), var(--glow);
+            transform: translateY(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        .info-panel.open {
+            transform: translateY(0);
+        }
+
+        .info-panel-inner {
+            padding: 1.5rem;
+        }
+
+        .info-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .info-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: var(--primary-dim);
+            border: 1px solid var(--border-glow);
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.25;
+        }
+
+        .info-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .info-close:hover {
+            background: rgba(255, 80, 80, 0.15);
+            color: #ff8080;
+        }
+
+        .info-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-tag {
+            padding: 0.25rem 0.6rem;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .info-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .info-row svg {
+            flex-shrink: 0;
+            color: var(--primary);
+        }
+
+        .info-directions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #000;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s;
+            box-shadow: var(--glow);
+            width: 100%;
+        }
+
+        .info-directions:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(0, 255, 135, 0.5);
+        }
+
+        /* ─── COUNT BADGE ─── */
+        .count-badge {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 200;
+            padding: 0.6rem 1.1rem;
+            border-radius: 100px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .count-num {
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        /* ─── LOADING ─── */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            transition: opacity 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary);
+            letter-spacing: -0.04em;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid rgba(0, 255, 135, 0.15);
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── LOCATION DENIED ─── */
+        .denied-banner {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            padding: 0.65rem 1.3rem;
+            border-radius: 100px;
+            background: rgba(255, 80, 80, 0.15);
+            border: 1px solid rgba(255, 80, 80, 0.35);
+            font-size: 0.8rem;
+            color: #ff8080;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .denied-banner.show {
+            display: flex;
+        }
+
+        /* No longer using Leaflet */
+
+        /* Custom marker */
+        .gg-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gg-marker-inner {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #00ff87 30%, #0f9b6a 100%);
+            border: 2px solid rgba(0, 255, 135, 0.6);
+            box-shadow: 0 0 16px rgba(0, 255, 135, 0.7), 0 0 4px rgba(0, 255, 135, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: markerPulse 2.5s ease-in-out infinite;
+            font-size: 14px;
+        }
+
+        @keyframes markerPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 16px rgba(0, 255, 135, 0.7), 0 0 4px rgba(0, 255, 135, 1);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 135, 0.9), 0 0 8px rgba(0, 255, 135, 1);
+            }
+        }
+
+        .gg-marker-ring {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 255, 135, 0.3);
+            animation: ringExpand 2.5s ease-out infinite;
+        }
+
+        @keyframes ringExpand {
+            0% {
+                transform: scale(0.6);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        /* User marker */
+        .user-marker-inner {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 3px solid white;
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.8);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 135, 0.2);
+            border-radius: 3px;
+        }
+
+        /* ─── RESPONSIVENESS ─── */
+        @media (max-width: 900px) {
+            .navbar {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .filter-bar {
+                top: 130px;
+                width: 90vw;
+                padding: 0.4rem;
+                overflow-x: auto;
+                justify-content: flex-start;
+                border-radius: 15px;
+            }
+
+            .status-card {
+                top: 190px;
+            }
+
+            .info-panel {
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                border-radius: 24px 24px 0 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nav-link {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.6rem;
+            }
+
+            .count-badge {
+                bottom: auto;
+                top: 240px;
+                right: 50%;
+                transform: translateX(50%);
+                font-size: 0.7rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .info-panel-inner {
+                padding: 1.25rem;
+            }
+
+            .info-name {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading screen -->
+    <div class="loading-overlay" id="loading">
+        <div class="loading-logo">🌿 GreenPoints</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Locating recycling centers near you…</div>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+    <div id="map-vignette"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="green-gravity.html" class="nav-brand">
+            <div class="nav-logo">GG</div>
+            <span class="nav-title">Green <span>Gravity</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="greenpoints-map.html" class="nav-link active">GreenPoints Map</a>
+            <a href="dashboard.html" class="nav-link">Reports</a>
+            <a href="ai-chat.html" class="nav-link">AI Assistant</a>
+        </div>
+    </nav>
+
+    <!-- Filter bar -->
+    <div class="filter-bar" id="filter-bar">
+        <button class="filter-pill active" data-type="all" onclick="applyFilter('all',this)">🗺 All</button>
+        <button class="filter-pill" data-type="plastic" onclick="applyFilter('plastic',this)">🧴 Plastic</button>
+        <button class="filter-pill" data-type="ewaste" onclick="applyFilter('ewaste',this)">💻 E-Waste</button>
+        <button class="filter-pill" data-type="organic" onclick="applyFilter('organic',this)">🌿 Organic</button>
+        <button class="filter-pill" data-type="glass" onclick="applyFilter('glass',this)">🍾 Glass</button>
+        <button class="filter-pill" data-type="campaign" onclick="applyFilter('campaign',this)">📢 Campaigns</button>
+    </div>
+
+    <!-- Status -->
+    <div class="status-card" id="status-card">
+        <div class="status-dot"></div>
+        <span id="status-text">Finding your location…</span>
+    </div>
+
+    <!-- Location denied banner -->
+    <div class="denied-banner" id="denied-banner">⚠ Location access denied — showing default view. Enable location for
+        nearby results.</div>
+
+    <!-- Info panel -->
+    <div class="info-panel" id="info-panel">
+        <div class="info-panel-inner">
+            <div class="info-header">
+                <div>
+                    <div class="info-type-badge" id="info-badge">♻ Recycling</div>
+                    <div class="info-name" id="info-name">—</div>
+                </div>
+                <div class="info-close" onclick="closeInfo()">✕</div>
+            </div>
+            <div class="info-tags" id="info-tags"></div>
+            <div class="info-meta">
+                <div class="info-row">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="10" r="3" />
+                        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 0 0-8-8z" />
+                    </svg>
+                    <span id="info-dist">— m away</span>
+                </div>
+                <div class="info-row" id="info-hours-row" style="display:none">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                    <span id="info-hours">Open</span>
+                </div>
+            </div>
+            <a class="info-directions" id="info-directions" href="#" target="_blank" rel="noopener">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                </svg>
+                Get Directions
+            </a>
+        </div>
+    </div>
+
+    <!-- Count badge -->
+    <div class="count-badge">
+        <span>♻</span> <span class="count-num" id="count-num">0</span> <span>GreenPoints found</span>
+    </div>
+
+    <!-- No longer using Leaflet -->
+    <script>
+        // ─── STATE ───
+        let map, userLat, userLng, allMarkers = [], activeFilter = 'all';
+        let AdvancedMarkerElement, PinElement;
+
+        // ─── DARK MAP STYLE ───
+        const DARK_STYLE = [
+            { "elementType": "geometry", "stylers": [{ "color": "#020d07" }] },
+            { "elementType": "labels.text.stroke", "stylers": [{ "color": "#020d07" }] },
+            { "elementType": "labels.text.fill", "stylers": [{ "color": "#e8f5ee" }, { "opacity": 0.5 }] },
+            { "featureType": "administrative", "elementType": "geometry.stroke", "stylers": [{ "color": "#0f9b6a" }, { "opacity": 0.2 }] },
+            { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#020d07" }] },
+            { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#04140a" }] },
+            { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#00ff87" }, { "opacity": 0.4 }] },
+            { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#04140a" }] },
+            { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#0f9b6a" }, { "opacity": 0.1 }] },
+            { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#04140a" }] },
+            { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#00ff87" }, { "opacity": 0.1 }] },
+            { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
+            { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#0f9b6a" }, { "opacity": 0.3 }] }
+        ];
+
+        // ─── INIT MAP ───
+        async function initMap(lat, lng) {
+            const { Map } = await google.maps.importLibrary("maps");
+            const libs = await google.maps.importLibrary("marker");
+            AdvancedMarkerElement = libs.AdvancedMarkerElement;
+            PinElement = libs.PinElement;
+
+            map = new Map(document.getElementById("map"), {
+                center: { lat, lng },
+                zoom: 14,
+                mapId: "DEMO_MAP_ID", // Required for Advanced Markers
+                disableDefaultUI: true,
+                zoomControl: true,
+                styles: DARK_STYLE
+            });
+
+            // User location marker
+            const userPin = document.createElement('div');
+            userPin.className = 'user-marker-inner';
+
+            new AdvancedMarkerElement({
+                map,
+                position: { lat, lng },
+                content: userPin,
+                title: "You are here"
+            });
+        }
+
+        // ─── CREATE MARKER CONTENT ───
+        function createMarkerContent(type) {
+            const emojis = { plastic: '🧴', ewaste: '💻', organic: '🌿', glass: '🍾', general: '♻' };
+            const em = emojis[type] || '♻';
+
+            const container = document.createElement('div');
+            container.className = 'gg-marker';
+            container.innerHTML = `
+                <div class="gg-marker-ring"></div>
+                <div class="gg-marker-inner">${em}</div>
+            `;
+            return container;
+        }
+
+        // ─── CLASSIFY OSM TAGS ───
+        function classifyPoint(tags) {
+            const str = JSON.stringify(tags).toLowerCase();
+            if (str.includes('electronics') || str.includes('battery') || str.includes('electrical')) return 'ewaste';
+            if (str.includes('plastic') || str.includes('bottles')) return 'plastic';
+            if (str.includes('organic') || str.includes('compost') || str.includes('food')) return 'organic';
+            if (str.includes('glass')) return 'glass';
+            if (str.includes('campaign')) return 'campaign';
+            return 'general';
+        }
+
+        // ─── HAVERSINE DISTANCE ───
+        function haversine(lat1, lng1, lat2, lng2) {
+            const R = 6371000, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // ─── FETCH OVERPASS ───
+        async function fetchRecyclingPoints(lat, lng) {
+            const radius = 6000;
+            const query = `[out:json][timeout:25];
+        (
+          node["amenity"="recycling"](around:${radius},${lat},${lng});
+          node["amenity"="waste_disposal"](around:${radius},${lat},${lng});
+          node["recycling_type"="centre"](around:${radius},${lat},${lng});
+          way["amenity"="recycling"](around:${radius},${lat},${lng});
+        );
+        out center qt 60;`;
+
+            const res = await fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST', body: 'data=' + encodeURIComponent(query)
+            });
+            const data = await res.json();
+            return data.elements || [];
+        }
+
+        // ─── PLACE MARKERS ───
+        function placeMarkers(elements) {
+            // Clear old
+            allMarkers.forEach(m => m.marker.map = null);
+            allMarkers = [];
+
+            elements.forEach(el => {
+                const lat = el.lat ?? el.center?.lat;
+                const lng = el.lon ?? el.center?.lon;
+                if (!lat || !lng) return;
+
+                const tags = el.tags || {};
+                const type = classifyPoint(tags);
+                const name = tags.name || tags['name:en'] || capitalise(type) + ' Recycling Point';
+                const dist = userLat ? Math.round(haversine(userLat, userLng, lat, lng)) : null;
+
+                const accepted = [];
+                if (tags['recycling:plastic'] === 'yes') accepted.push('Plastic');
+                if (tags['recycling:glass'] === 'yes') accepted.push('Glass');
+                if (tags['recycling:paper'] === 'yes') accepted.push('Paper');
+                if (tags['recycling:metal'] === 'yes') accepted.push('Metal');
+                if (tags['recycling:electronics'] === 'yes') accepted.push('Electronics');
+                if (tags['recycling:batteries'] === 'yes') accepted.push('Batteries');
+                if (tags['recycling:organic'] === 'yes') accepted.push('Organic');
+                if (accepted.length === 0) accepted.push('General Waste');
+
+                const marker = new AdvancedMarkerElement({
+                    map,
+                    position: { lat, lng },
+                    content: createMarkerContent(type),
+                    title: name
+                });
+
+                const entry = { marker, lat, lng, name, type, accepted, dist, tags };
+                allMarkers.push(entry);
+
+                marker.addListener('click', () => openInfo(entry));
+            });
+
+            if (allMarkers.length === 0) injectFallback();
+            updateCount();
+            setStatus(`Showing ${allMarkers.length} locations`, true);
+        }
+
+        function capitalise(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        // ─── FALLBACK (demo) ───
+        function injectFallback() {
+            const demos = [
+                { lat: userLat + 0.005, lng: userLng + 0.003, name: 'Community Plastic Hub', type: 'plastic', accepted: ['Plastic', 'Bottles'] },
+                { lat: userLat - 0.004, lng: userLng + 0.005, name: 'E-Waste Depot', type: 'ewaste', accepted: ['Electronics', 'Batteries', 'Cables'] },
+                { lat: userLat + 0.003, lng: userLng - 0.006, name: 'Green Compost Centre', type: 'organic', accepted: ['Organic', 'Food Waste'] },
+                { lat: userLat - 0.006, lng: userLng - 0.003, name: 'Glass & Metal Point', type: 'glass', accepted: ['Glass', 'Metal'] },
+                { lat: userLat + 0.008, lng: userLng + 0.001, name: 'Municipal Recycling Yard', type: 'general', accepted: ['Plastic', 'Paper', 'Metal', 'Glass'] },
+            ];
+            demos.forEach(d => {
+                const dist = Math.round(haversine(userLat, userLng, d.lat, d.lng));
+                if (typeof google !== 'undefined' && map) {
+                    const marker = new AdvancedMarkerElement({
+                        map,
+                        position: { lat: d.lat, lng: d.lng },
+                        content: createMarkerContent(d.type),
+                        title: d.name
+                    });
+                    const entry = { marker, lat: d.lat, lng: d.lng, name: d.name, type: d.type, accepted: d.accepted, dist };
+                    allMarkers.push(entry);
+                    marker.addListener('click', () => openInfo(entry));
+                } else {
+                    // Marker-less entry if map failed
+                    allMarkers.push({ marker: { set map(v) { } }, lat: d.lat, lng: d.lng, name: d.name, type: d.type, accepted: d.accepted, dist });
+                }
+            });
+        }
+
+        // ─── FILTER ───
+        function applyFilter(type, btn) {
+            activeFilter = type;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            allMarkers.forEach(entry => {
+                const show = type === 'all' || entry.type === type;
+                entry.marker.map = show ? map : null;
+            });
+            updateCount();
+        }
+
+        function updateCount() {
+            const visible = activeFilter === 'all' ? allMarkers.length : allMarkers.filter(e => e.type === activeFilter).length;
+            document.getElementById('count-num').textContent = visible;
+        }
+
+        // ─── INFO PANEL ───
+        function openInfo(entry) {
+            const typeLabels = { plastic: '🧴 Plastic', ewaste: '💻 E-Waste', organic: '🌿 Organic', glass: '🍾 Glass', campaign: '📢 Campaign', general: '♻ General' };
+            document.getElementById('info-badge').textContent = typeLabels[entry.type] || '♻ Recycling';
+            document.getElementById('info-name').textContent = entry.name;
+            document.getElementById('info-dist').textContent = entry.dist ? (entry.dist < 1000 ? entry.dist + 'm away' : (entry.dist / 1000).toFixed(1) + 'km away') : 'Distance unknown';
+            document.getElementById('info-tags').innerHTML = entry.accepted.map(a => `<span class="info-tag">${a}</span>`).join('');
+            const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${entry.lat},${entry.lng}`;
+            document.getElementById('info-directions').href = dirUrl;
+            document.getElementById('info-panel').classList.add('open');
+            map.panTo({ lat: entry.lat, lng: entry.lng });
+        }
+        function closeInfo() { document.getElementById('info-panel').classList.remove('open'); }
+
+        // ─── STATUS ───
+        function setStatus(text, hide = false) {
+            document.getElementById('status-text').textContent = text;
+            if (hide) setTimeout(() => document.getElementById('status-card').classList.add('hidden'), 3000);
+        }
+
+        // ─── MAIN ───
+        async function fetchCampaigns() {
+            try {
+                const res = await fetch('/campaigns');
+                const data = await res.json();
+                // Map campaigns to random points around Bangalore for visual demo
+                return data.map((c, i) => ({
+                    lat: 12.9716 + (Math.random() - 0.5) * 0.05,
+                    lng: 77.5946 + (Math.random() - 0.5) * 0.05,
+                    tags: { name: c.title, campaign: 'yes', locality: c.locality },
+                    type: 'campaign'
+                }));
+            } catch (e) { return []; }
+        }
+
+        async function main() {
+            const fallbackLat = 12.9716, fallbackLng = 77.5946;
+            try {
+                const pos = await new Promise((resolve, reject) =>
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 6000 })
+                ).catch(() => ({ coords: { latitude: fallbackLat, longitude: fallbackLng } }));
+
+                userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+
+                if (typeof google !== 'undefined') {
+                    await initMap(userLat, userLng);
+                } else {
+                    setStatus('Map engine (Google) failed to load. Showing point data only.');
+                }
+
+                setStatus('Fetching data…');
+                const [osmPoints, campaigns] = await Promise.all([
+                    fetchRecyclingPoints(userLat, userLng),
+                    fetchCampaigns()
+                ]);
+
+                placeMarkers([...osmPoints, ...campaigns]);
+
+            } catch (e) {
+                console.error("Main Error:", e);
+                if (typeof google === 'undefined') {
+                    setStatus('Critical Error: Map failed to initialize.');
+                    injectFallback();
+                } else {
+                    await initMap(fallbackLat, fallbackLng);
+                    injectFallback();
+                }
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                updateCount();
+            }
+        }
+
+        main();
+    </script>
+</body>
+
+</html>
