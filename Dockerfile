@@ -1,5 +1,12 @@
 FROM python:3.11-slim
 
+# Product metadata labels
+LABEL org.opencontainers.image.title="WasteWise"
+LABEL org.opencontainers.image.description="Premium eco-app for waste classification, carbon tracking, and green rewards"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.authors="WasteWise Team"
+LABEL org.opencontainers.image.vendor="WasteWise"
+
 # Set working directory
 WORKDIR /app
 

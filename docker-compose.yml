@@ -3,6 +3,12 @@ version: '3.8'
 services:
   app:
     build: .
+    container_name: wastewise-app
+    labels:
+      - "app.name=WasteWise"
+      - "app.description=Premium eco-app for waste classification, carbon tracking, and green rewards"
+      - "app.version=1.0.0"
+      - "app.author=WasteWise Team"
     ports:
       - "8000:8000"
     volumes:
@@ -10,4 +16,5 @@ services:
       - ./backend/uploads:/app/backend/uploads
     environment:
       - PORT=8000
+      - PYTHONUNBUFFERED=1
     restart: always

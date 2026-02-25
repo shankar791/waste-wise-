@@ -1,6 +1,9 @@
 {
-  "name": "cinematic-scroll",
-  "version": "0.1.0",
+  "name": "wastewise-frontend",
+  "version": "1.0.0",
+  "description": "WasteWise - Premium eco-app for waste classification, carbon tracking, and green rewards",
+  "author": "WasteWise Team",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",

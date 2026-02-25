@@ -177,7 +177,6 @@ def calculate_reward_points(score: float) -> int:
     return points
 
 
-
 # ─── Authentication Endpoints ──────────────────────────────────────────────────
 
 @app.post("/signup")
@@ -239,7 +238,6 @@ def login(
 
     logger.info(f"User logged in: {email}")
     return {"message": "Login successful", "email": email}
-
 
 
 # ─── Upload & Analysis Endpoint ────────────────────────────────────────────────
@@ -337,7 +335,6 @@ async def upload(
         "reward_points": points,
         "impact_message": f"You reduced {carbon} kg CO₂ — equivalent to planting {trees} trees 🌳",
     }
-
 
 
 # ─── Data Endpoints ────────────────────────────────────────────────────────────
@@ -442,7 +439,6 @@ def report(
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
-
 
 
 # ─── Serve Frontend Static Files ──────────────────────────────────────────────

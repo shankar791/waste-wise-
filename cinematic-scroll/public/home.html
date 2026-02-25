@@ -778,11 +778,23 @@
                 try {
                     const fd = new FormData();
                     fd.append('email', email);
-                    fd.append('image', file);
                     fd.append('weight', num);
+                    fd.append('image', file);
                     const res = await fetch('/user/upload', { method: 'POST', body: fd });
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        alert('Upload failed: ' + (errorData.detail || 'Server error'));
+                        btn.textContent = 'Submit';
+                        btn.disabled = false;
+                        return;
+                    }
                     const data = await res.json();
-                    if (data.error) { alert('Error: ' + data.error); btn.textContent = 'Submit'; btn.disabled = false; return; }
+                    if (!data.success) {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        btn.textContent = 'Submit';
+                        btn.disabled = false;
+                        return;
+                    }
                     localStorage.setItem('ww_result', JSON.stringify(data));
                     localStorage.setItem('ww_file', file.name);
                     localStorage.setItem('ww_weight', num);
@@ -961,10 +973,17 @@
                 fd.append('role', 'user');
                 const res = await fetch('/login', { method: 'POST', body: fd });
                 if (!res.ok) {
-                    throw new Error('Invalid credentials');
+                    const errorData = await res.json();
+                    emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                    passEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                    const existingError = passEl.parentNode.querySelector('.login-error');
+                    if (!existingError) {
+                        passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">' + (errorData.detail || 'Invalid credentials. Please try again.') + '</p>');
+                    }
+                    return;
                 }
                 const data = await res.json();
-                if (!data['login success']) {
+                if (!data.message || !data.email) {
                     emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
                     passEl.style.borderColor = 'rgba(220,50,50,0.5)';
                     const existingError = passEl.parentNode.querySelector('.login-error');
