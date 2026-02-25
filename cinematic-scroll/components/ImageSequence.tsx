@@ -11,41 +11,70 @@ gsap.registerPlugin(ScrollTrigger);
 // Configuration
 const TOTAL_FRAMES = 96;
 const FRAME_PATH = "/frames/frame_";
+// Load critical frames first for faster initial display
+const CRITICAL_FRAMES = [0, 24, 48, 72, 95]; // Key frames for quick preview
 
 export default function ImageSequence() {
     const { viewport } = useThree();
     const meshRef = useRef<THREE.Mesh>(null);
     const [textures, setTextures] = useState<THREE.Texture[]>([]);
     const [loaded, setLoaded] = useState(false);
+    const [criticalLoaded, setCriticalLoaded] = useState(false);
 
     // Progress ref to be mutated by GSAP
     const progress = useRef({ value: 0 });
 
-    // Preload textures
+    // Preload textures with progressive loading strategy
     useEffect(() => {
         const manager = new THREE.LoadingManager();
         const loader = new THREE.TextureLoader(manager);
         const tempTextures: THREE.Texture[] = [];
+        let criticalCount = 0;
+
+        // First: Load critical frames immediately
+        const criticalManager = new THREE.LoadingManager();
+        const criticalLoader = new THREE.TextureLoader(criticalManager);
+
+        criticalManager.onLoad = () => {
+            setCriticalLoaded(true);
+            // Dispatch early ready event after critical frames load
+            setTimeout(() => {
+                window.dispatchEvent(new Event("assets-loaded"));
+                setLoaded(true);
+            }, 500); // Small delay for smoother transition
+        };
+
+        // Load critical frames first
+        CRITICAL_FRAMES.forEach((frameIndex) => {
+            tempTextures[frameIndex] = criticalLoader.load(`${FRAME_PATH}${frameIndex}.jpg`);
+        });
+
+        // Then load remaining frames in background
+        const loadRemainingFrames = () => {
+            for (let i = 0; i < TOTAL_FRAMES; i++) {
+                if (!CRITICAL_FRAMES.includes(i)) {
+                    tempTextures[i] = loader.load(`${FRAME_PATH}${i}.jpg`);
+                }
+            }
+        };
+
+        // Delay background loading slightly to prioritize critical frames
+        const timeoutId = setTimeout(loadRemainingFrames, 100);
 
         manager.onLoad = () => {
             setTextures(tempTextures);
-            setLoaded(true);
-            window.dispatchEvent(new Event("assets-loaded"));
         };
 
-        for (let i = 0; i < TOTAL_FRAMES; i++) {
-            tempTextures[i] = loader.load(`${FRAME_PATH}${i}.jpg`);
-        }
-
         return () => {
+            clearTimeout(timeoutId);
             // Cleanup textures on unmount
-            tempTextures.forEach(t => t.dispose());
+            tempTextures.forEach(t => t && t.dispose());
         };
     }, []);
 
-    // Setup ScrollTrigger
+    // Setup ScrollTrigger after any assets are ready
     useEffect(() => {
-        if (!loaded || textures.length === 0) return;
+        if (!criticalLoaded || textures.length === 0) return;
 
         const trigger = ScrollTrigger.create({
             trigger: "body",
@@ -68,16 +97,23 @@ export default function ImageSequence() {
         return () => {
             trigger.kill();
         };
-    }, [loaded, textures]);
+    }, [criticalLoaded, textures]);
 
-    // Render loop
+    // Render loop - fallback to nearest loaded frame if current isn't ready
     useFrame(() => {
-        if (!meshRef.current || !loaded || textures.length === 0) return;
+        if (!meshRef.current || !criticalLoaded || textures.length === 0) return;
 
-        const frameIndex = Math.min(
+        let frameIndex = Math.min(
             TOTAL_FRAMES - 1,
             Math.floor(progress.current.value * TOTAL_FRAMES)
         );
+
+        // Find nearest loaded texture if current frame isn't loaded
+        let attempts = 0;
+        while (!textures[frameIndex] && attempts < TOTAL_FRAMES) {
+            frameIndex = (frameIndex + 1) % TOTAL_FRAMES;
+            attempts++;
+        }
 
         const currentTexture = textures[frameIndex];
         if (currentTexture) {
@@ -89,10 +125,11 @@ export default function ImageSequence() {
         }
     });
 
-    // Aspect ratio logic
+    // Aspect ratio logic - fallback to first critical frame
     const textureAspect = useMemo(() => {
-        if (textures[0] && textures[0].image) {
-            const img = textures[0].image as any; // Cast to bypass strict {} check
+        const textureToCheck = textures[0] || textures[CRITICAL_FRAMES[0]];
+        if (textureToCheck && textureToCheck.image) {
+            const img = textureToCheck.image as any;
             return img.width / img.height;
         }
         return 16 / 9;
