@@ -1087,7 +1087,7 @@
     </div>
 
     <script>
-        const API = 'http://localhost:8000';
+        const API = window.location.origin;
 
         // â”€â”€ Read from localStorage (written by index.html after POST /user/upload) â”€â”€
         const result = JSON.parse(localStorage.getItem('ww_result') || '{}');
