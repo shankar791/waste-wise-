@@ -266,6 +266,9 @@
         <p class="cta-sub">Upload a photo of your waste and instantly get AI-powered disposal guidance, carbon impact
             scores, and green rewards.</p>
         <button class="cta-btn" onclick="window.location.href='/home.html'">Get Started →</button>
+        <button class="cta-btn" onclick="window.location.href='/dashboard.html'"
+            style="margin-top: -10px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.3);">Go
+            to Dashboard →</button>
     </div>
 
     <script>
@@ -287,7 +290,7 @@
 
         function drawFrame(idx) {
             if (idx < 0 || idx >= images.length) return;
-            
+
             const img = images[idx];
             if (!img) {
                 // Fallback: draw gradient
@@ -325,7 +328,7 @@
             const p = Math.round((total / TOTAL_FRAMES) * 100);
             bar.style.width = p + '%';
             pct.textContent = p + '%';
-            
+
             if (total >= TOTAL_FRAMES) {
                 clearTimeout(loadTimeout);
                 onAllLoaded();
@@ -336,18 +339,18 @@
             const img = new Image();
             img.src = `/frames/frame_${i}.jpg`;
             img.crossOrigin = 'anonymous';
-            
+
             img.onload = () => {
                 loaded++;
                 updateProgress();
             };
-            
+
             img.onerror = () => {
                 failedCount++;
                 console.warn(`Failed to load frame ${i}`);
                 updateProgress();
             };
-            
+
             images[i] = img;
         }
 
