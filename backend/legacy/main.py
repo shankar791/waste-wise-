@@ -43,6 +43,9 @@ from database import (
     add_report,
 )
 
+from typing import List
+import schemas
+
 # Configure logging
 logging.basicConfig(
     level=LOG_LEVEL,
@@ -180,7 +183,7 @@ def calculate_reward_points(score: float) -> int:
 
 # ─── Authentication Endpoints ──────────────────────────────────────────────────
 
-@app.post("/signup")
+@app.post("/signup", response_model=schemas.SignupResponse)
 def signup(
     email: str = Form(...),
     password: str = Form(...),
@@ -216,7 +219,7 @@ def signup(
     return {"message": "Account created successfully", "email": email}
 
 
-@app.post("/login")
+@app.post("/login", response_model=schemas.LoginResponse)
 def login(
     email: str = Form(...),
     password: str = Form(...),
@@ -244,7 +247,7 @@ def login(
 
 # ─── Upload & Analysis Endpoint ────────────────────────────────────────────────
 
-@app.post("/user/upload")
+@app.post("/user/upload", response_model=schemas.UploadResponse)
 async def upload(
     email: str = Form(...),
     weight: float = Form(...),
@@ -342,7 +345,7 @@ async def upload(
 
 # ─── Data Endpoints ────────────────────────────────────────────────────────────
 
-@app.get("/user/stats")
+@app.get("/user/stats", response_model=schemas.UserStats)
 def user_stats(email: str):
     """
     Get user statistics.
@@ -359,7 +362,7 @@ def user_stats(email: str):
     return stats
 
 
-@app.get("/user/co2-graph")
+@app.get("/user/co2-graph", response_model=List[schemas.WeeklyCarbon])
 def co2_graph(email: str):
     """
     Get weekly CO2 graph data for user.
@@ -375,7 +378,7 @@ def co2_graph(email: str):
     return [{"week": r[0], "carbon": round(r[1], 2)} for r in data]
 
 
-@app.get("/user/streak")
+@app.get("/user/streak", response_model=schemas.StreakResponse)
 def user_streak(email: str):
     """
     Get user's current activity streak (consecutive days).
@@ -391,28 +394,28 @@ def user_streak(email: str):
     return {"streak": streak}
 
 
-@app.get("/leaderboard")
+@app.get("/leaderboard", response_model=List[schemas.LeaderboardEntry])
 def board():
     """Get top 10 users by reward points."""
     data = leaderboard()
     return [{"rank": i + 1, "email": row[0], "points": row[1]} for i, row in enumerate(data)]
 
 
-@app.get("/rewards")
+@app.get("/rewards", response_model=List[schemas.RewardItem])
 def rewards():
     """Get all available rewards and their required points."""
     rows = get_rewards()
     return [{"name": r[0], "points_required": r[1]} for r in rows]
 
 
-@app.get("/campaigns")
+@app.get("/campaigns", response_model=List[schemas.CampaignItem])
 def campaigns():
     """Get active environmental campaigns."""
     rows = get_campaigns()
     return [{"title": r[0], "locality": r[1]} for r in rows]
 
 
-@app.post("/report")
+@app.post("/report", response_model=schemas.GenericResponse)
 def report(
     email: str = Form(...),
     message: str = Form(...),
@@ -438,7 +441,7 @@ def report(
 
 # ─── Health Check Endpoint ────────────────────────────────────────────────────
 
-@app.get("/health")
+@app.get("/health", response_model=schemas.HealthCheckResponse)
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}

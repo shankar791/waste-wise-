@@ -67,6 +67,12 @@ def init_db() -> None:
             message TEXT,
             target  TEXT
         );
+        
+        -- Performance Indexes
+        CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email);
+        CREATE INDEX IF NOT EXISTS idx_waste_logs_email ON waste_logs(email);
+        CREATE INDEX IF NOT EXISTS idx_waste_logs_date ON waste_logs(date);
+        CREATE INDEX IF NOT EXISTS idx_reports_email ON reports(email);
         """)
 
         # ── Seed rewards if empty ────────────────────────────────────────────────

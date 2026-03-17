@@ -808,11 +808,11 @@
 
             elements.forEach(el => {
                 const lat = el.lat ?? el.center?.lat;
-                const lng = el.lon ?? el.center?.lon;
+                const lng = el.lon ?? el.lng ?? el.center?.lon;
                 if (!lat || !lng) return;
 
                 const tags = el.tags || {};
-                const type = classifyPoint(tags);
+                const type = el.type === 'campaign' ? 'campaign' : classifyPoint(tags);
                 const name = tags.name || tags['name:en'] || capitalise(type) + ' Recycling Point';
                 const dist = userLat ? Math.round(haversine(userLat, userLng, lat, lng)) : null;
 
@@ -824,7 +824,8 @@
                 if (tags['recycling:electronics'] === 'yes') accepted.push('Electronics');
                 if (tags['recycling:batteries'] === 'yes') accepted.push('Batteries');
                 if (tags['recycling:organic'] === 'yes') accepted.push('Organic');
-                if (accepted.length === 0) accepted.push('General Waste');
+                if (type === 'campaign') accepted.push('Event', tags.locality || 'Local Area');
+                else if (accepted.length === 0) accepted.push('General Waste');
 
                 const marker = new AdvancedMarkerElement({
                     map,
@@ -955,7 +956,12 @@
                     setStatus('Critical Error: Map failed to initialize.');
                     injectFallback();
                 } else {
-                    await initMap(fallbackLat, fallbackLng);
+                    try {
+                        if (!map) await initMap(fallbackLat, fallbackLng);
+                    } catch (err) {
+                        console.warn("Secondary map init failed:", err);
+                        setStatus('Map engine (Google) failed to load. Showing point data only.', true);
+                    }
                     injectFallback();
                 }
             } finally {
