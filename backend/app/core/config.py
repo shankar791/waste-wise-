@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_SIZE_MB: int = 50
-    CORS_ORIGINS: list = ["*"]
+    CORS_ORIGINS: str | list = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "app.log"
