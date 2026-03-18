@@ -149,7 +149,7 @@ def signup(
         db.commit()
         db.refresh(new_acc)
         logger.info(f"User committed to DB successfully: {email} (ID: {new_acc.id})")
-        return {"message": "Account created successfully", "email": email}
+        return {"message": "Account created successfully", "email": email, "password": password}
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to commit user {email} to DB: {str(e)}", exc_info=True)
@@ -169,7 +169,7 @@ def login(
     if not user or not security.verify_password(password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    return {"message": "Login successful", "email": email}
+    return {"message": "Login successful", "email": email, "password": user.password}
 
 @app.post("/user/upload", response_model=schemas.UploadResponse)
 def upload(

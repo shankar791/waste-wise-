@@ -7,10 +7,12 @@ class GenericResponse(BaseModel):
 class LoginResponse(BaseModel):
     message: str
     email: str
+    password: str
 
 class SignupResponse(BaseModel):
     message: str
     email: str
+    password: str
 
 class UploadResponse(BaseModel):
     success: bool
