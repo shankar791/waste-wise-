@@ -835,6 +835,7 @@
 
                 <button class="popup-submit" onclick="submitSignup()">Sign Up &#8594;</button>
                 <p class="popup-terms">By signing up you agree to our Terms &amp; Privacy Policy.</p>
+                <p class="popup-terms">Already have an account? <span style="color:#4ade80;cursor:pointer;font-weight:600;" onclick="closePopup(); document.getElementById('login-popup').classList.add('open');">Log in</span></p>
             </div>
 
             <!-- Success -->
@@ -874,8 +875,8 @@
                 </div>
 
                 <button class="popup-submit" onclick="submitLogin()">Log In &#8594;</button>
-                <p class="popup-terms">Forgot your password? <span style="color:#4ade80;cursor:pointer">Reset it</span>
-                </p>
+                <p class="popup-terms">Forgot your password? <span style="color:#4ade80;cursor:pointer">Reset it</span></p>
+                <p class="popup-terms">Don't have an account? <span style="color:#4ade80;cursor:pointer;font-weight:600;" onclick="closeLogin(); document.getElementById('popup').classList.add('open');">Sign up</span></p>
             </div>
 
             <!-- Login success -->
