@@ -47,13 +47,10 @@ app.add_middleware(
 )
 
 # ─── 5. Tables Creation / Migration ──────────────
-# Use: Base.metadata.create_all(bind=engine)
-# (Optional: mention Alembic but default to create_all)
-# 
-# Note: In production you'd use Alembic migrations, but this acts as default.
 Base.metadata.create_all(bind=engine)
 
 UPLOAD_PATH.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_PATH)), name="uploads")
 
 # ─── Utility Functions ──────────────
 
@@ -118,19 +115,28 @@ def signup(
     role: str = Form(default="user"),
     db: Session = Depends(get_db)
 ):
+    logger.info(f"Register endpoint hit for email: {email}")
     if not validate_email(email): raise HTTPException(status_code=400, detail="Invalid email format")
     if not validate_password(password): raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
     email = email.strip()
     result = db.execute(select(models.Account).filter(models.Account.email == email))
     if result.scalars().first():
+        logger.warning(f"Registration failed: Account {email} already exists")
         raise HTTPException(status_code=409, detail="Account already exists with this email")
     
-    hashed = security.get_password_hash(password)
-    new_acc = models.Account(email=email, password=hashed, role=role.strip())
-    db.add(new_acc)
-    db.commit()
-    return {"message": "Account created successfully", "email": email}
+    try:
+        hashed = security.get_password_hash(password)
+        new_acc = models.Account(email=email, password=hashed, role=role.strip())
+        db.add(new_acc)
+        db.commit()
+        db.refresh(new_acc)
+        logger.info(f"User committed to DB successfully: {email} (ID: {new_acc.id})")
+        return {"message": "Account created successfully", "email": email}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to commit user {email} to DB: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database internal error during registration")
 
 @app.post("/login", response_model=schemas.LoginResponse)
 def login(
@@ -155,49 +161,63 @@ def upload(
     image: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    if not validate_email(email): raise HTTPException(status_code=400, detail="Invalid email format")
-    if not validate_weight(weight): raise HTTPException(status_code=400, detail="Weight must be between 0 and 1000 kg")
+    if not validate_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    if not validate_weight(weight):
+        raise HTTPException(status_code=400, detail="Weight must be between 0 and 1000 kg")
+
     validate_file_upload(image)
-    
-    # Check if user exists
-    result = db.execute(select(models.Account).filter(models.Account.email == email))
+
+    result = db.execute(select(models.Account).filter(models.Account.email == email.strip()))
     if not result.scalars().first():
         raise HTTPException(status_code=404, detail="Unknown user. Please sign up first.")
-        
-    save_uploaded_file(image, UPLOAD_PATH)
-    waste_type, subcategory = classify_waste(image.filename)
-    carbon = round(weight * CARBON_EMISSIONS.get(waste_type, 1.0), 2)
-    trees = round(carbon / 21, 2)
-    score = calculate_sustainability_score(weight, carbon)
-    points = calculate_reward_points(score)
-    disposal_info = DISPOSAL_MAP.get(waste_type, {
-        "recyclable_status": "non-recyclable",
-        "energy_potential": "none",
-        "treatment": "safe disposal",
-        "instructions": "Dispose responsibly",
-    })
-    
-    new_log = models.WasteLog(
-        email=email, waste_type=waste_type, subcategory=subcategory, 
-        carbon=carbon, points=points, date=str(datetime_date.today())
-    )
-    db.add(new_log)
-    db.commit()
-    
-    return {
-        "success": True,
-        "waste_type": waste_type,
-        "subcategory": subcategory,
-        "recyclable_status": disposal_info["recyclable_status"],
-        "energy_potential": disposal_info["energy_potential"],
-        "recommended_treatment": disposal_info["treatment"],
-        "disposal_instructions": disposal_info["instructions"],
-        "carbon_saved": carbon,
-        "trees_equivalent": trees,
-        "sustainability_score": score,
-        "reward_points": points,
-        "impact_message": f"You reduced {carbon} kg CO₂ — equivalent to planting {trees} trees 🌳",
-    }
+
+    try:
+        save_uploaded_file(image, UPLOAD_PATH)
+        waste_type, subcategory = classify_waste(image.filename)
+        carbon = round(weight * CARBON_EMISSIONS.get(waste_type, 1.0), 2)
+        trees = round(carbon / 21, 2)
+        score = calculate_sustainability_score(weight, carbon)
+        points = calculate_reward_points(score)
+        disposal_info = DISPOSAL_MAP.get(waste_type, {
+            "recyclable_status": "non-recyclable",
+            "energy_potential": "none",
+            "treatment": "safe disposal",
+            "instructions": "Dispose responsibly",
+        })
+
+        new_log = models.WasteLog(
+            email=email.strip(),
+            waste_type=waste_type,
+            subcategory=subcategory,
+            weight=weight,
+            image_url=f"/uploads/{image.filename}",
+            carbon=carbon,
+            points=points,
+            date=str(datetime_date.today())
+        )
+        db.add(new_log)
+        db.commit()
+        db.refresh(new_log)
+
+        return {
+            "success": True,
+            "waste_type": waste_type,
+            "subcategory": subcategory,
+            "recyclable_status": disposal_info["recyclable_status"],
+            "energy_potential": disposal_info["energy_potential"],
+            "recommended_treatment": disposal_info["treatment"],
+            "disposal_instructions": disposal_info["instructions"],
+            "carbon_saved": carbon,
+            "trees_equivalent": trees,
+            "sustainability_score": score,
+            "reward_points": points,
+            "impact_message": f"You reduced {carbon} kg CO₂ — equivalent to planting {trees} trees 🌳",
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Upload failed for {email}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to save upload data")
 
 @app.get("/user/stats", response_model=schemas.UserStats)
 def user_stats(email: str, db: Session = Depends(get_db)):
@@ -319,4 +339,3 @@ def test_db():
 _PUBLIC = Path(__file__).resolve().parent.parent.parent / "cinematic-scroll" / "public"
 if _PUBLIC.exists():
     app.mount("/", StaticFiles(directory=str(_PUBLIC), html=True), name="static")
-

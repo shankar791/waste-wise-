@@ -22,6 +22,8 @@ class WasteLog(Base):
     email = Column(String, ForeignKey("accounts.email"), index=True)
     waste_type = Column(String, index=True)
     subcategory = Column(String)
+    weight = Column(Float)            # Added: Save the uploaded weight
+    image_url = Column(String)        # Added: Save the image path
     carbon = Column(Float)
     points = Column(Integer)
     date = Column(String, index=True) # Text date YYYY-MM-DD
