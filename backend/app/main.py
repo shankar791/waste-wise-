@@ -49,6 +49,23 @@ app.add_middleware(
 # ─── 5. Tables Creation / Migration ──────────────
 Base.metadata.create_all(bind=engine)
 
+from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError, OperationalError
+# Auto-migrate new columns safely (supports Postgres & SQLite fallback)
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN weight FLOAT"))
+        conn.commit()
+except (ProgrammingError, OperationalError, Exception):
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN image_url VARCHAR"))
+        conn.commit()
+except (ProgrammingError, OperationalError, Exception):
+    pass
+
 UPLOAD_PATH.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_PATH)), name="uploads")
 
