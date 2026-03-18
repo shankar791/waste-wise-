@@ -53,3 +53,16 @@ class CampaignItem(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     status: str
+
+class HistoryEntry(BaseModel):
+    id: int
+    waste_type: str
+    subcategory: Optional[str] = None
+    weight: Optional[float] = None
+    image_url: Optional[str] = None
+    carbon: Optional[float] = None
+    points: Optional[int] = None
+    date: str
+
+class UserHistoryResponse(BaseModel):
+    logs: List[HistoryEntry]

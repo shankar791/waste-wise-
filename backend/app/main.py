@@ -255,6 +255,29 @@ def user_stats(email: str, db: Session = Depends(get_db)):
         "total_carbon": round(row.total_carbon or 0, 2)
     }
 
+@app.get("/user/history", response_model=schemas.UserHistoryResponse)
+def user_history(email: str, db: Session = Depends(get_db)):
+    if not email: raise HTTPException(status_code=400, detail="Email is required")
+    result = db.execute(
+        select(models.WasteLog)
+        .filter(models.WasteLog.email == email)
+        .order_by(models.WasteLog.id.desc())
+    )
+    rows = result.scalars().all()
+    logs = []
+    for r in rows:
+        logs.append({
+            "id": r.id,
+            "waste_type": r.waste_type,
+            "subcategory": r.subcategory,
+            "weight": r.weight,
+            "image_url": r.image_url,
+            "carbon": r.carbon,
+            "points": r.points,
+            "date": r.date
+        })
+    return {"logs": logs}
+
 @app.get("/user/co2-graph", response_model=List[schemas.WeeklyCarbon])
 def co2_graph(email: str, db: Session = Depends(get_db)):
     if not email: return []
