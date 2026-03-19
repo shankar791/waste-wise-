@@ -23,13 +23,19 @@ class WasteLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("accounts.email"), index=True)
     waste_type = Column(String, index=True)
-    subcategory = Column(String)
-    weight = Column(Float)            # Added: Save the uploaded weight
-    image_url = Column(String)        # Added: Save the image path
-    image_data = Column(LargeBinary)  # Added: Save the actual image blob
+    subcategory = Column(String, nullable=True)
+    item_name = Column(String, nullable=True)
+    
+    predicted_label = Column(String, nullable=True)
+    confidence_score = Column(Float, nullable=True)
+    classification_source = Column(String, default="fallback") # ai_model or fallback
+    
+    weight = Column(Float)            
+    image_url = Column(String, nullable=True)        
+    image_data = Column(LargeBinary, nullable=True)  
     carbon = Column(Float)
     points = Column(Integer)
-    date = Column(String, index=True) # Text date YYYY-MM-DD
+    date = Column(String, index=True) 
     
     account = relationship("Account", back_populates="waste_logs")
 

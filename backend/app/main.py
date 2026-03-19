@@ -19,6 +19,7 @@ from app.db.database import engine, Base
 from app.models import models
 from app.api.deps import get_db
 from app.schemas import schemas
+from app.services.waste_classifier import orchestrate_classification
 from typing import List
 
 # Configure logging
@@ -78,6 +79,16 @@ try:
         conn.execute(text("ALTER TABLE waste_logs ADD COLUMN image_url VARCHAR"))
         conn.commit()
 except (ProgrammingError, OperationalError, Exception):
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN item_name VARCHAR"))
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN predicted_label VARCHAR"))
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN confidence_score FLOAT"))
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN classification_source VARCHAR"))
+        conn.commit()
+except Exception:
     pass
 
 try:
@@ -226,11 +237,20 @@ def upload(
 
     try:
         image_bytes = image.file.read()
-        waste_type, subcategory = classify_waste(image.filename)
+        
+        # ─── REAL AI CLASSIFICATION ───
+        cls = orchestrate_classification(image_bytes, image.filename)
+        
+        waste_type = cls["category"]
+        subcategory = cls["subcategory"]
+        item_name = cls["item_name"]
+        
+        # Environmental calculations
         carbon = round(weight * CARBON_EMISSIONS.get(waste_type, 1.0), 2)
         trees = round(carbon / 21, 2)
         score = calculate_sustainability_score(weight, carbon)
         points = calculate_reward_points(score)
+        
         disposal_info = DISPOSAL_MAP.get(waste_type, {
             "recyclable_status": "non-recyclable",
             "energy_potential": "none",
@@ -242,6 +262,10 @@ def upload(
             email=email.strip(),
             waste_type=waste_type,
             subcategory=subcategory,
+            item_name=item_name,
+            predicted_label=cls["predicted_label"],
+            confidence_score=cls["confidence_score"],
+            classification_source=cls["classification_source"],
             weight=weight,
             image_url="",
             image_data=image_bytes,
@@ -253,7 +277,6 @@ def upload(
         db.commit()
         db.refresh(new_log)
         
-        # Point the URL to the new dynamic endpoint
         new_log.image_url = f"/image/{new_log.id}"
         db.commit()
 
@@ -261,6 +284,10 @@ def upload(
             "success": True,
             "waste_type": waste_type,
             "subcategory": subcategory,
+            "item_name": item_name,
+            "predicted_label": cls["predicted_label"],
+            "confidence_score": cls["confidence_score"],
+            "classification_source": cls["classification_source"],
             "recyclable_status": disposal_info["recyclable_status"],
             "energy_potential": disposal_info["energy_potential"],
             "recommended_treatment": disposal_info["treatment"],
@@ -367,6 +394,10 @@ def user_history(email: str, db: Session = Depends(get_db)):
             "id": r.id,
             "waste_type": r.waste_type,
             "subcategory": r.subcategory,
+            "item_name": r.item_name,
+            "predicted_label": r.predicted_label,
+            "confidence_score": r.confidence_score,
+            "classification_source": r.classification_source,
             "weight": r.weight,
             "image_url": r.image_url,
             "carbon": r.carbon,

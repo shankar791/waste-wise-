@@ -18,6 +18,12 @@ class UploadResponse(BaseModel):
     success: bool
     waste_type: str
     subcategory: str
+    item_name: str
+    
+    predicted_label: Optional[str] = "Unknown"
+    confidence_score: float = 0.0
+    classification_source: str = "fallback"
+    
     recyclable_status: str
     energy_potential: str
     recommended_treatment: str
@@ -60,6 +66,10 @@ class HistoryEntry(BaseModel):
     id: int
     waste_type: str
     subcategory: Optional[str] = None
+    item_name: Optional[str] = None
+    predicted_label: Optional[str] = None
+    confidence_score: Optional[float] = None
+    classification_source: Optional[str] = None
     weight: Optional[float] = None
     image_url: Optional[str] = None
     carbon: Optional[float] = None

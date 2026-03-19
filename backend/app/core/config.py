@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     CORS_ALLOW_CREDENTIALS: bool = True
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "app.log"
+    
+    # AI Classification Settings
+    AI_CONFIDENCE_THRESHOLD: float = 0.55
 
     class Config:
         env_file = ".env"
