@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.database import Base
@@ -11,6 +11,8 @@ class Account(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
     role = Column(String, default="user")
+    full_name = Column(String, nullable=True)
+    profile_picture_url = Column(String, nullable=True)
     
     waste_logs = relationship("WasteLog", back_populates="account")
     reports = relationship("Report", back_populates="account")
@@ -24,6 +26,7 @@ class WasteLog(Base):
     subcategory = Column(String)
     weight = Column(Float)            # Added: Save the uploaded weight
     image_url = Column(String)        # Added: Save the image path
+    image_data = Column(LargeBinary)  # Added: Save the actual image blob
     carbon = Column(Float)
     points = Column(Integer)
     date = Column(String, index=True) # Text date YYYY-MM-DD

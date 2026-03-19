@@ -68,3 +68,8 @@ class HistoryEntry(BaseModel):
 
 class UserHistoryResponse(BaseModel):
     logs: List[HistoryEntry]
+
+class UserProfileResponse(BaseModel):
+    email: str
+    full_name: str
+    profile_picture_url: Optional[str] = None

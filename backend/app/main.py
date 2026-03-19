@@ -61,9 +61,37 @@ except (ProgrammingError, OperationalError, Exception):
 
 try:
     with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN image_data BYTEA"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE waste_logs ADD COLUMN image_data BLOB"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
         conn.execute(text("ALTER TABLE waste_logs ADD COLUMN image_url VARCHAR"))
         conn.commit()
 except (ProgrammingError, OperationalError, Exception):
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE accounts ADD COLUMN full_name VARCHAR"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE accounts ADD COLUMN profile_picture_url VARCHAR"))
+        conn.commit()
+except Exception:
     pass
 
 UPLOAD_PATH.mkdir(parents=True, exist_ok=True)
@@ -190,7 +218,7 @@ def upload(
         raise HTTPException(status_code=404, detail="Unknown user. Please sign up first.")
 
     try:
-        save_uploaded_file(image, UPLOAD_PATH)
+        image_bytes = image.file.read()
         waste_type, subcategory = classify_waste(image.filename)
         carbon = round(weight * CARBON_EMISSIONS.get(waste_type, 1.0), 2)
         trees = round(carbon / 21, 2)
@@ -208,7 +236,8 @@ def upload(
             waste_type=waste_type,
             subcategory=subcategory,
             weight=weight,
-            image_url=f"/uploads/{image.filename}",
+            image_url="",
+            image_data=image_bytes,
             carbon=carbon,
             points=points,
             date=str(datetime_date.today())
@@ -216,6 +245,10 @@ def upload(
         db.add(new_log)
         db.commit()
         db.refresh(new_log)
+        
+        # Point the URL to the new dynamic endpoint
+        new_log.image_url = f"/image/{new_log.id}"
+        db.commit()
 
         return {
             "success": True,
@@ -235,6 +268,22 @@ def upload(
         db.rollback()
         logger.error(f"Upload failed for {email}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to save upload data")
+
+@app.get("/user/me", response_model=schemas.UserProfileResponse)
+def user_me(email: str, db: Session = Depends(get_db)):
+    if not email: raise HTTPException(status_code=400, detail="Email is required")
+    result = db.execute(select(models.Account).filter(models.Account.email == email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Return placeholder name if none exists (since we just added the column)
+    full_name = user.full_name if user.full_name else "WasteWise User"
+    return {
+        "email": user.email,
+        "full_name": full_name,
+        "profile_picture_url": user.profile_picture_url
+    }
 
 @app.get("/user/stats", response_model=schemas.UserStats)
 def user_stats(email: str, db: Session = Depends(get_db)):
@@ -370,6 +419,17 @@ def report(
 @app.get("/health", response_model=schemas.HealthCheckResponse)
 def health_check():
     return {"status": "healthy"}
+
+from fastapi.responses import Response
+
+@app.get("/image/{log_id}")
+def get_image(log_id: int, db: Session = Depends(get_db)):
+    result = db.execute(select(models.WasteLog).filter(models.WasteLog.id == log_id))
+    log = result.scalars().first()
+    if not log or not log.image_data:
+        raise HTTPException(status_code=404, detail="Image not found")
+    # For simplicity, returning as JPEG. In a full app, track mimetype.
+    return Response(content=log.image_data, media_type="image/jpeg")
 
 # ─── 6. Test Endpoint ──────────────
 @app.get("/test-db")

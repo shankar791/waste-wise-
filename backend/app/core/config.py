@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     APP_AUTHOR: str = "WasteWise Team"
     APP_HOMEPAGE: str = "https://wastewise.eco"
 
-    # Railway sets DATABASE_URL automatically. We ensure it has the correct psycopg2 driver.
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/wastewise")
+    # Force SQLite for local usage seamlessly
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./local_db.sqlite3")
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
     elif DATABASE_URL.startswith("postgresql://") and "psycopg2" not in DATABASE_URL:

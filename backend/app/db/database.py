@@ -19,22 +19,29 @@ elif DATABASE_URL.startswith("postgresql://"):
 elif DATABASE_URL.startswith("postgresql+asyncpg://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
 
-# SSL only for external connections
-connect_args = {}
-if "localhost" not in DATABASE_URL and "127.0.0.1" not in DATABASE_URL and "railway.internal" not in DATABASE_URL:
-    connect_args["sslmode"] = "require"
-
 logger.info("Initializing database engine")
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    pool_size=10,        # Explicit connection pool size for production concurrency
-    max_overflow=20,     # Max overflow connections for unexpected traffic spikes
-    connect_args=connect_args,
-    future=True,
-)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        future=True,
+    )
+else:
+    # SSL only for external connections
+    connect_args = {}
+    if "localhost" not in DATABASE_URL and "127.0.0.1" not in DATABASE_URL and "railway.internal" not in DATABASE_URL:
+        connect_args["sslmode"] = "require"
+
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        pool_size=10,        # Explicit connection pool size for production concurrency
+        max_overflow=20,     # Max overflow connections for unexpected traffic spikes
+        connect_args=connect_args,
+        future=True,
+    )
 
 SessionLocal = sessionmaker(
     autocommit=False,
