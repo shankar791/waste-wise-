@@ -94,6 +94,13 @@ try:
 except Exception:
     pass
 
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE accounts ADD COLUMN profile_picture_data BLOB"))
+        conn.commit()
+except Exception:
+    pass
+
 UPLOAD_PATH.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_PATH)), name="uploads")
 
@@ -284,6 +291,47 @@ def user_me(email: str, db: Session = Depends(get_db)):
         "full_name": full_name,
         "profile_picture_url": user.profile_picture_url
     }
+
+@app.post("/user/upload-profile-pic", response_model=schemas.UserProfileResponse)
+def upload_profile_pic(
+    email: str = Form(...),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Upload a profile picture; stores it as binary and serves it via /user/profile-pic/{email}"""
+    if not validate_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email")
+    result = db.execute(select(models.Account).filter(models.Account.email == email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    validate_file_upload(image)
+    image_bytes = image.file.read()
+    user.profile_picture_url = f"/user/profile-pic/{email}"
+    # store on Account model — requires profile_picture_data column
+    try:
+        from sqlalchemy import text as _text
+        db.execute(_text(f"UPDATE accounts SET profile_picture_data = :d WHERE email = :e"), {"d": image_bytes, "e": email})
+    except Exception:
+        pass
+    db.commit()
+    db.refresh(user)
+    return {
+        "email": user.email,
+        "full_name": user.full_name or "WasteWise User",
+        "profile_picture_url": user.profile_picture_url
+    }
+
+@app.get("/user/profile-pic/{email}")
+def get_profile_pic(email: str, db: Session = Depends(get_db)):
+    from fastapi.responses import Response
+    try:
+        row = db.execute(text("SELECT profile_picture_data FROM accounts WHERE email = :e"), {"e": email}).first()
+        if row and row[0]:
+            return Response(content=row[0], media_type="image/jpeg")
+    except Exception:
+        pass
+    raise HTTPException(status_code=404, detail="No profile picture")
 
 @app.get("/user/stats", response_model=schemas.UserStats)
 def user_stats(email: str, db: Session = Depends(get_db)):

@@ -73,10 +73,16 @@
             left: 0;
             right: 0;
             z-index: 10;
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: space-between;
             padding: 2rem 2.5rem;
+        }
+
+        .header-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
 
         /* Left: REDUCE REUSE RECYCLE */
@@ -603,12 +609,21 @@
         @media (max-width: 850px) {
             .header {
                 padding: 1.5rem;
-                flex-direction: column;
-                gap: 1.2rem;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                justify-items: center;
+                gap: 1rem;
             }
 
             .tagline {
                 display: none;
+            }
+
+            /* On mobile the right container should be positioned absolutely */
+            .header-right {
+                position: absolute;
+                top: 1.5rem;
+                right: 1.5rem;
             }
 
             .glass-nav {
@@ -616,6 +631,7 @@
                 flex-wrap: wrap;
                 justify-content: center;
                 border-radius: 20px;
+                grid-column: 1;
             }
 
             .nav-link {
@@ -668,6 +684,11 @@
                 padding: 1rem;
             }
 
+            .header-right {
+                top: 1rem;
+                right: 1rem;
+            }
+
             .glass-nav {
                 gap: 0;
             }
@@ -699,7 +720,9 @@
         .user-avatar-btn svg { color: rgba(10,30,10,0.8); }
         .user-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
         .user-dropdown-menu {
-            position: absolute; top: 54px; right: 0; width: 280px;
+            position: absolute; top: 54px; right: 0;
+            width: min(280px, calc(100vw - 2rem));
+            max-width: 280px;
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(60px) saturate(2);
             -webkit-backdrop-filter: blur(60px) saturate(2);
@@ -710,13 +733,32 @@
             transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 100;
         }
+
+        /* Ensure dropdown never clips off-screen on small viewports */
+        @media (max-width: 520px) {
+            .user-dropdown-menu {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            .user-dropdown-menu.show {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
         .user-dropdown-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .dropdown-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .dd-avatar-wrap { position: relative; flex-shrink: 0; cursor: pointer; }
+        .dd-avatar-wrap:hover .dd-cam-overlay { opacity: 1; }
+        .dd-cam-overlay {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s; color: white;
+        }
         .dd-profile-init {
             width: 48px; height: 48px; border-radius: 50%;
             background: linear-gradient(135deg, #22c55e, #16a34a); color: white;
             font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
         }
         .dd-profile-pic {
             width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
@@ -725,6 +767,7 @@
         .dd-user-info { flex: 1; overflow: hidden; }
         .dd-user-info h4 { font-size: 0.95rem; font-weight: 700; color: rgba(10, 30, 10, 0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.2rem; }
         .dd-user-info p { font-size: 0.72rem; font-weight: 500; color: rgba(20, 40, 15, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dd-pic-hint { font-size: 0.62rem; color: rgba(22,101,52,0.75); margin-top: 0.15rem; }
         .dropdown-divider { height: 1px; background: rgba(0, 0, 0, 0.08); margin: 0.8rem 0; }
         .dropdown-btn {
             width: 100%; display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.8rem;
@@ -739,6 +782,24 @@
         .login-btn:hover { box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35); transform: translateY(-1px); }
         .signup-btn { background: rgba(255, 255, 255, 0.3); color: rgba(10, 30, 10, 0.9); border: 1px solid rgba(0, 0, 0, 0.05); justify-content: center; }
         .signup-btn:hover { background: rgba(255, 255, 255, 0.5); }
+
+        /* ─── WASTE IMAGE PREVIEW ─── */
+        .img-preview-wrap {
+            display: none; align-items: center; gap: 0.6rem;
+            padding: 0.4rem 0.6rem 0.4rem 0.4rem;
+            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25);
+            border-radius: 12px; margin-top: 0.5rem; animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from {opacity:0;transform:scale(0.97)} to {opacity:1;transform:scale(1)} }
+        .img-preview-thumb {
+            width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+            border: 1px solid rgba(34,197,94,0.4); flex-shrink: 0;
+        }
+        .img-preview-info { flex: 1; min-width: 0; }
+        .img-preview-name { font-size: 0.72rem; font-weight: 600; color: rgba(10,30,10,0.8); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+        .img-preview-size { font-size: 0.62rem; color: rgba(30,50,20,0.5); margin-top:1px; }
+        .img-preview-clear { width:18px; height:18px; border:none; background:rgba(0,0,0,0.08); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:rgba(10,30,10,0.5); font-size:0.75rem; transition:background 0.2s; }
+        .img-preview-clear:hover { background:rgba(220,50,50,0.15); color:#dc2626; }
     </style>
 </head>
 
@@ -755,7 +816,7 @@
             <!-- Left: Tagline -->
             <span class="tagline">Reduce &nbsp; Reuse &nbsp; Recycle</span>
 
-            <!-- Center: Glass Nav -->
+            <!-- Center: Glass Nav (grid column 2 — always centered) -->
             <nav class="glass-nav">
                 <a href="dashboard.html" class="nav-link">Dashboard</a>
                 <div class="nav-divider"></div>
@@ -769,41 +830,54 @@
             </nav>
 
             <!-- Right: User Account Icon & Dropdown -->
-            <div class="user-dropdown-container" id="user-dropdown-container">
-                <div class="user-avatar-btn" id="user-avatar-btn" onclick="toggleUserDropdown(event)">
-                    <svg id="default-avatar-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <img src="" alt="Avatar" id="btn-profile-pic" style="display: none;" />
-                </div>
-                
-                <div class="user-dropdown-menu" id="user-dropdown-menu">
-                    <div id="dropdown-logged-in" style="display: none;">
-                        <div class="dropdown-header">
-                            <img src="" alt="Profile" id="dd-profile-pic" class="dd-profile-pic" style="display: none;" />
-                            <div class="dd-profile-init" id="dd-profile-init"></div>
-                            <div class="dd-user-info">
-                                <h4 id="dd-full-name">...</h4>
-                                <p id="dd-email">...</p>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <button class="dropdown-btn logout-btn" onclick="logoutUser()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg> &nbsp; Log Out
-                        </button>
+            <div class="header-right">
+                <div class="user-dropdown-container" id="user-dropdown-container">
+                    <div class="user-avatar-btn" id="user-avatar-btn" onclick="toggleUserDropdown(event)">
+                        <svg id="default-avatar-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <img src="" alt="Avatar" id="btn-profile-pic" style="display: none;" />
                     </div>
-                    
-                    <div id="dropdown-logged-out" style="display: none;">
-                        <div class="dropdown-empty-state">
-                            <p><strong>Join WasteWise</strong><br/>Track your carbon impact and earn rewards!</p>
+
+                    <div class="user-dropdown-menu" id="user-dropdown-menu">
+                        <div id="dropdown-logged-in" style="display: none;">
+                            <div class="dropdown-header">
+                                <div class="dd-avatar-wrap" onclick="document.getElementById('profile-pic-input').click()" title="Click to change photo">
+                                    <img src="" alt="Profile" id="dd-profile-pic" class="dd-profile-pic" style="display: none;"
+                                        onerror="this.style.display='none';document.getElementById('dd-profile-init').style.display='flex';" />
+                                    <div class="dd-profile-init" id="dd-profile-init"></div>
+                                    <div class="dd-cam-overlay">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                            <circle cx="12" cy="13" r="4"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="dd-user-info">
+                                    <h4 id="dd-full-name">...</h4>
+                                    <p id="dd-email">...</p>
+                                    <p class="dd-pic-hint">Tap photo to change</p>
+                                </div>
+                            </div>
+                            <input type="file" id="profile-pic-input" accept="image/*" style="display:none" onchange="uploadProfilePic(this)" />
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-btn logout-btn" onclick="logoutUser()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                    <polyline points="16 17 21 12 16 7" />
+                                    <line x1="21" y1="12" x2="9" y2="12" />
+                                </svg> &nbsp; Log Out
+                            </button>
                         </div>
-                        <button class="dropdown-btn login-btn" onclick="openLoginFromDropdown()">Log In</button>
-                        <button class="dropdown-btn signup-btn" onclick="openSignupFromDropdown()">Sign Up</button>
+
+                        <div id="dropdown-logged-out" style="display: none;">
+                            <div class="dropdown-empty-state">
+                                <p><strong>Join WasteWise</strong><br/>Track your carbon impact and earn rewards!</p>
+                            </div>
+                            <button class="dropdown-btn login-btn" onclick="openLoginFromDropdown()">Log In</button>
+                            <button class="dropdown-btn signup-btn" onclick="openSignupFromDropdown()">Sign Up</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -813,7 +887,7 @@
         <!-- Combined Input Bar -->
         <div class="combo-wrap">
             <div class="combo-bar">
-                <!-- File section -->
+                                <!-- File section --->
                 <div class="combo-file" onclick="document.getElementById('img-input').click()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" style="color:rgba(30,50,20,0.45);flex-shrink:0">
@@ -821,7 +895,7 @@
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                     </svg>
-                    <span class="file-label" id="file-label">Input your file</span>
+                    <span class="file-label" id="file-label">Select waste image</span>
                 </div>
 
                 <!-- Divider -->
@@ -840,16 +914,52 @@
                     Submit
                 </button>
             </div>
+            <!-- Image preview strip (shows after selection) -->
+            <div class="img-preview-wrap" id="img-preview-wrap">
+                <img id="img-preview-thumb" class="img-preview-thumb" src="" alt="Preview"
+                    onerror="this.src='';" />
+                <div class="img-preview-info">
+                    <div class="img-preview-name" id="img-preview-name"></div>
+                    <div class="img-preview-size" id="img-preview-size"></div>
+                </div>
+                <button class="img-preview-clear" onclick="clearImageSelection()" title="Remove">&times;</button>
+            </div>
             <input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImage(this)" />
         </div>
 
         <script>
             function handleImage(input) {
                 const label = document.getElementById('file-label');
+                const preview = document.getElementById('img-preview-wrap');
+                const thumb = document.getElementById('img-preview-thumb');
+                const nameEl = document.getElementById('img-preview-name');
+                const sizeEl = document.getElementById('img-preview-size');
+
                 if (input.files && input.files[0]) {
-                    label.textContent = '\u2713 ' + input.files[0].name;
+                    const file = input.files[0];
+                    // Update label text
+                    label.textContent = '\u2713 ' + file.name;
                     label.classList.add('has-file');
+
+                    // Show thumbnail preview
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        thumb.src = e.target.result;
+                        preview.style.display = 'flex';
+                        nameEl.textContent = file.name;
+                        sizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
+                    };
+                    reader.readAsDataURL(file);
                 }
+            }
+
+            function clearImageSelection() {
+                const input = document.getElementById('img-input');
+                input.value = '';
+                document.getElementById('file-label').textContent = 'Select waste image';
+                document.getElementById('file-label').classList.remove('has-file');
+                document.getElementById('img-preview-wrap').style.display = 'none';
+                document.getElementById('img-preview-thumb').src = '';
             }
             async function handleSubmit() {
                 const file = document.getElementById('img-input').files[0];
@@ -1029,32 +1139,87 @@
         async function fetchUserProfile(email) {
             try {
                 const res = await fetch(`/user/me?email=${encodeURIComponent(email)}`);
-                if(res.ok) {
+                if (res.ok) {
                     const data = await res.json();
-                    document.getElementById('dd-full-name').textContent = data.full_name || "WasteWise User";
+                    document.getElementById('dd-full-name').textContent = data.full_name || 'WasteWise User';
                     document.getElementById('dd-email').textContent = data.email || email;
-                    
+
                     if (data.profile_picture_url) {
-                        const avatarSrc = data.profile_picture_url;
-                        document.getElementById('dd-profile-pic').src = avatarSrc;
-                        document.getElementById('dd-profile-pic').style.display = 'block';
-                        document.getElementById('dd-profile-init').style.display = 'none';
-                        
-                        document.getElementById('btn-profile-pic').src = avatarSrc;
-                        document.getElementById('btn-profile-pic').style.display = 'block';
-                        document.getElementById('default-avatar-svg').style.display = 'none';
+                        applyProfilePic(data.profile_picture_url + '?t=' + Date.now(), data.full_name || email);
                     } else {
-                        document.getElementById('dd-profile-init').textContent = (data.full_name || email).charAt(0).toUpperCase();
+                        setAvatarInitial(data.full_name || email);
                     }
                 } else {
                     document.getElementById('dd-full-name').textContent = 'WasteWise User';
                     document.getElementById('dd-email').textContent = email;
-                    document.getElementById('dd-profile-init').textContent = email.charAt(0).toUpperCase();
+                    setAvatarInitial(email);
                 }
-            } catch(e) {
+            } catch (e) {
                 document.getElementById('dd-full-name').textContent = 'WasteWise User';
                 document.getElementById('dd-email').textContent = email;
-                document.getElementById('dd-profile-init').textContent = email.charAt(0).toUpperCase();
+                setAvatarInitial(email);
+            }
+        }
+
+        function applyProfilePic(src, fallbackName) {
+            const ddPic = document.getElementById('dd-profile-pic');
+            const ddInit = document.getElementById('dd-profile-init');
+            const btnPic = document.getElementById('btn-profile-pic');
+            const btnSvg = document.getElementById('default-avatar-svg');
+
+            ddPic.src = src;
+            ddPic.style.display = 'block';
+            ddInit.style.display = 'none';
+            // Fallback in case image fails to load
+            ddPic.onerror = () => {
+                ddPic.style.display = 'none';
+                ddInit.style.display = 'flex';
+                setAvatarInitial(fallbackName);
+            };
+
+            btnPic.src = src;
+            btnPic.style.display = 'block';
+            btnSvg.style.display = 'none';
+            btnPic.onerror = () => {
+                btnPic.style.display = 'none';
+                btnSvg.style.display = 'block';
+            };
+        }
+
+        function setAvatarInitial(nameOrEmail) {
+            const init = (nameOrEmail || 'W').charAt(0).toUpperCase();
+            const ddInit = document.getElementById('dd-profile-init');
+            ddInit.textContent = init;
+            ddInit.style.display = 'flex';
+            document.getElementById('dd-profile-pic').style.display = 'none';
+            document.getElementById('btn-profile-pic').style.display = 'none';
+            document.getElementById('default-avatar-svg').style.display = 'block';
+        }
+
+        async function uploadProfilePic(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const email = localStorage.getItem('ww_email');
+            if (!email) return;
+
+            // Instant local preview
+            const reader = new FileReader();
+            reader.onload = (e) => applyProfilePic(e.target.result, email);
+            reader.readAsDataURL(file);
+
+            // Upload to backend
+            try {
+                const fd = new FormData();
+                fd.append('email', email);
+                fd.append('image', file);
+                const res = await fetch('/user/upload-profile-pic', { method: 'POST', body: fd });
+                if (res.ok) {
+                    const data = await res.json();
+                    // Refresh with server URL (cache-busted)
+                    applyProfilePic(data.profile_picture_url + '?t=' + Date.now(), data.full_name || email);
+                }
+            } catch (e) {
+                console.error('Profile pic upload failed', e);
             }
         }
 
@@ -1151,10 +1316,31 @@
             const passEl = document.getElementById('login-password');
             const email = emailEl.value.trim();
             const pass = passEl.value;
+
+            // Clear previous errors before each attempt
+            emailEl.style.borderColor = '';
+            emailEl.style.boxShadow = '';
+            passEl.style.borderColor = '';
+            passEl.style.boxShadow = '';
+            const prevErrors = document.querySelectorAll('#login-form .login-error');
+            prevErrors.forEach(el => el.remove());
+
             if (!email || !email.includes('@')) {
-                emailEl.style.borderColor = 'rgba(220,50,50,0.5)'; emailEl.focus(); return;
+                emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                emailEl.style.boxShadow = '0 0 0 3px rgba(220,50,50,0.1)';
+                emailEl.focus(); return;
             }
-            if (!pass) { passEl.style.borderColor = 'rgba(220,50,50,0.5)'; passEl.focus(); return; }
+            if (!pass) {
+                passEl.style.borderColor = 'rgba(220,50,50,0.5)';
+                passEl.style.boxShadow = '0 0 0 3px rgba(220,50,50,0.1)';
+                passEl.focus(); return;
+            }
+
+            // Show loading state
+            const submitBtn = document.querySelector('#login-form .popup-submit');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Logging in…';
+            submitBtn.disabled = true;
 
             try {
                 const fd = new FormData();
@@ -1166,24 +1352,24 @@
                     const errorData = await res.json();
                     emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
                     passEl.style.borderColor = 'rgba(220,50,50,0.5)';
-                    const existingError = passEl.parentNode.querySelector('.login-error');
-                    if (!existingError) {
-                        passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">' + (errorData.detail || 'Invalid credentials. Please try again.') + '</p>');
-                    }
+                    passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">' + (errorData.detail || 'Invalid credentials. Please try again.') + '</p>');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
                     return;
                 }
                 const data = await res.json();
                 if (!data.message || !data.email) {
                     emailEl.style.borderColor = 'rgba(220,50,50,0.5)';
                     passEl.style.borderColor = 'rgba(220,50,50,0.5)';
-                    const existingError = passEl.parentNode.querySelector('.login-error');
-                    if (!existingError) {
-                        passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">Invalid credentials. Please try again.</p>');
-                    }
+                    passEl.insertAdjacentHTML('afterend', '<p class="login-error" style="color:#f87171;font-size:0.75rem;margin-top:0.3rem">Invalid credentials. Please try again.</p>');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
                     return;
                 }
             } catch (e) {
                 alert('Login failed. Please check your credentials or server status.');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
                 return;
             }
 
@@ -1195,13 +1381,8 @@
             setTimeout(() => closeLogin(), 2500);
         }
 
-        function handleImage(input) {
-            const label = document.getElementById('file-label');
-            if (input.files && input.files[0]) {
-                label.textContent = '\u2713  ' + input.files[0].name;
-                label.classList.add('has-file');
-            }
-        }
+        // NOTE: handleImage is fully defined in the inline script above inside .frame
+        // This empty stub is removed to avoid shadowing the real implementation.
     </script>
 
 </body>

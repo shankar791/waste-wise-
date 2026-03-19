@@ -72,14 +72,20 @@
             left: 0;
             right: 0;
             z-index: 300;
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: space-between;
             padding: 1rem 2rem;
             background: rgba(2, 13, 7, 0.8);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border-bottom: 1px solid var(--border);
+        }
+
+        .nav-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
 
         .nav-brand {
@@ -549,14 +555,21 @@
         @media (max-width: 900px) {
             .navbar {
                 padding: 1rem;
-                flex-direction: column;
-                gap: 1rem;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                justify-items: center;
+                gap: 0.8rem;
+            }
+
+            .nav-brand {
+                justify-self: center;
             }
 
             .nav-links {
                 width: 100%;
                 justify-content: center;
                 flex-wrap: wrap;
+                display: flex; /* Force display since it was hidden */
             }
 
             .filter-bar {
@@ -632,6 +645,7 @@
             <a href="dashboard.html" class="nav-link">Reports</a>
             <a href="ai-chat.html" class="nav-link">AI Assistant</a>
         </div>
+        <div class="nav-right"></div>
     </nav>
 
     <!-- Filter bar -->
@@ -700,6 +714,10 @@
 
     <!-- No longer using Leaflet -->
     <script>
+        // ─── AUTH GUARD ───
+        const _authEmail = localStorage.getItem('ww_email');
+        if (!_authEmail) { window.location.href = 'home.html'; }
+
         // ─── STATE ───
         let map, userLat, userLng, allMarkers = [], activeFilter = 'all';
         let AdvancedMarkerElement, PinElement;
