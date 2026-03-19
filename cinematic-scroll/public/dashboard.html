@@ -906,8 +906,16 @@
                 </div>
 
                 <div class="report-grid">
+                    <div class="report-item" style="grid-column: span 2; border: 1.5px solid var(--primary); background: rgba(34,197,94,0.05);">
+                        <div class="report-item-label">AI Vision Recognition</div>
+                        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                            <div class="report-item-value" id="r-item-name" style="font-size: 1.4rem; color: var(--primary-dark);">Detecting...</div>
+                            <span id="r-confidence" style="font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 100px; background: var(--primary); color: white;">0%</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem;">AI Label: <span id="r-prediction-label">—</span></div>
+                    </div>
                     <div class="report-item">
-                        <div class="report-item-label">Waste Type</div>
+                        <div class="report-item-label">Waste Category</div>
                         <div class="report-item-value" id="r-waste-type">—</div>
                     </div>
                     <div class="report-item">
@@ -917,14 +925,6 @@
                     <div class="report-item">
                         <div class="report-item-label">Recycle Status</div>
                         <div class="report-item-value" style="color: var(--primary-dark)" id="r-recycle-status">—</div>
-                    </div>
-                    <div class="report-item">
-                        <div class="report-item-label">Energy Potential</div>
-                        <div class="report-item-value" style="color: var(--accent-amber)" id="r-energy">—</div>
-                    </div>
-                    <div class="report-item">
-                        <div class="report-item-label">Treatment</div>
-                        <div class="report-item-value" id="r-treatment">—</div>
                     </div>
                     <div class="report-item">
                         <div class="report-item-label">Carbon Saved</div>
@@ -982,8 +982,17 @@
             const score = result.sustainability_score != null ? result.sustainability_score : '—';
             const sub = result.subcategory || '—';
 
+            // AI Vision Recognition fields
+            document.getElementById('r-item-name').textContent = result.item_name || 'Generic Item';
+            document.getElementById('r-prediction-label').textContent = result.predicted_label || '—';
+            const confidence = (result.confidence_score || 0) * 100;
+            const confEl = document.getElementById('r-confidence');
+            confEl.textContent = confidence.toFixed(1) + '%';
+            if (confidence < 50) confEl.style.background = '#f59e0b'; // Amber for low confidence
+            if (confidence < 30) confEl.style.background = '#ef4444'; // Red for very low
+
             // Highlight cards
-            document.getElementById('hl-product').textContent = sub;
+            document.getElementById('hl-product').textContent = result.item_name || sub;
             document.getElementById('hl-product-sub').textContent = result.waste_type ? result.waste_type + ' waste' : 'Identified from image';
             document.getElementById('hl-carbon').textContent = co2 !== '—' ? co2 + ' kg CO₂' : '— kg CO₂';
             document.getElementById('hl-carbon-sub').textContent = weight > 0 ? 'Based on ' + weight + ' kg weight' : 'Enter weight for estimate';
@@ -992,18 +1001,14 @@
             document.getElementById('r-waste-type').textContent = result.waste_type || '—';
             document.getElementById('r-subcategory').textContent = result.subcategory || '—';
             document.getElementById('r-recycle-status').textContent = result.recyclable_status || '—';
-            document.getElementById('r-energy').textContent = result.energy_potential || '—';
-            document.getElementById('r-treatment').textContent = result.recommended_treatment || '—';
             document.getElementById('r-carbon-saved').textContent = co2 !== '—' ? co2 + ' kg CO₂' : '—';
             document.getElementById('r-trees').textContent = trees !== '—' ? '🌲 ' + trees + ' trees/yr' : '—';
             document.getElementById('r-sustainability').textContent = score !== '—' ? score + '/100' : '—';
 
-            // Format the highlight message
-            if (co2 !== '—' && trees !== '—') {
-                document.getElementById('r-impact-msg').innerHTML = `You saved <strong>${co2} kg CO₂</strong> — equivalent to planting <strong>${trees} trees</strong> 🌲`;
-            } else {
-                document.getElementById('r-impact-msg').textContent = result.impact_message || 'Submit a waste image to see your eco impact.';
-            }
+            // Impact message based on item
+            const impactMsg = document.getElementById('r-impact-msg');
+            const source = result.classification_source === 'ai' ? 'AI Vision' : 'Keyword Match';
+            impactMsg.innerHTML = `Our <strong>${source}</strong> identified this as <strong>${result.item_name || 'waste'}</strong>. Recycling it prevents <strong>${co2} kg of CO₂</strong> from entering the atmosphere. Great job!`;
         }, 300);
 
         // ── Amber pulse keyframe ──

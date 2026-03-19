@@ -23,6 +23,7 @@ class UploadResponse(BaseModel):
     predicted_label: Optional[str] = "Unknown"
     confidence_score: float = 0.0
     classification_source: str = "fallback"
+    image_url: Optional[str] = None
     
     recyclable_status: str
     energy_potential: str

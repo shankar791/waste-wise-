@@ -288,6 +288,7 @@ def upload(
             "predicted_label": cls["predicted_label"],
             "confidence_score": cls["confidence_score"],
             "classification_source": cls["classification_source"],
+            "image_url": f"/image/{new_log.id}",
             "recyclable_status": disposal_info["recyclable_status"],
             "energy_potential": disposal_info["energy_potential"],
             "recommended_treatment": disposal_info["treatment"],
